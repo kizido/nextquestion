@@ -1,10 +1,10 @@
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import questions from './questions';
+import questions from '../questions.json';
 
-export default function App() {
-  const shuffleArray = (array) => {
+export default function FunQuestions() {
+  const shuffleArray = (array: string[]) => {
     let newArray = array.slice();
     for (let i = newArray.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
