@@ -39,7 +39,7 @@ export default function FunQuestions() {
   };
 
   const toggleThumbsDown = () => {
-    console.log("THUMBS UP");
+    console.log("THUMBS DOWN");
   };
   const toggleThumbsUp = () => {
     console.log("THUMBS UP");
