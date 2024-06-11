@@ -31,6 +31,11 @@ const HomeScreen = () => {
           <Text style={styles.buttonText}>Future Questions</Text>
         </Pressable>
       </Link>
+      <Link href="/mixupQuestions" asChild>
+      <Pressable style={{...styles.button, backgroundColor: '#3CC0CF'}}>
+          <Text style={styles.buttonText}>Mix It Up</Text>
+        </Pressable>
+      </Link>
     </View>
   );
 };
