@@ -1,7 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import questions from '../deepQuestions.json';
+import questions from "../deepQuestions.json";
 import { Feather } from "@expo/vector-icons";
 
 export default function DeepQuestions() {
@@ -38,7 +38,9 @@ export default function DeepQuestions() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.questionTextLandscape}>{currentQuestion}</Text>
+      <View style={styles.questionContainer}>
+        <Text style={styles.questionTextLandscape}>{currentQuestion}</Text>
+      </View>
       <StatusBar style="auto" />
       <View style={styles.arrowRow}>
         <TouchableOpacity onPress={previousQuestion} activeOpacity={1}>
@@ -61,7 +63,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#25292e",
     alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 50,
+  },
+  questionContainer: {
+    flex: 1,
     justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
   },
   questionTextLandscape: {
     color: "white",
@@ -70,9 +79,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   arrowRow: {
-    display: "flex",
     flexDirection: "row",
-    marginTop: 32,
+    marginBottom: 32,
     gap: 32,
   },
 });

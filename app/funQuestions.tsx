@@ -47,7 +47,9 @@ export default function FunQuestions() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.questionTextLandscape}>{currentQuestion}</Text>
+      <View style={styles.questionContainer}>
+        <Text style={styles.questionTextLandscape}>{currentQuestion}</Text>
+      </View>
       <StatusBar style="auto" />
       <View style={styles.arrowRow}>
         <TouchableOpacity onPress={previousQuestion} activeOpacity={1}>
@@ -61,16 +63,6 @@ export default function FunQuestions() {
           <Feather name="chevron-right" size={48} color="white" />
         </TouchableOpacity>
       </View>
-      <View style={styles.arrowRow}>
-        <TouchableOpacity onPress={toggleThumbsDown} activeOpacity={1}>
-          <MaterialIcons name="thumb-down-off-alt" size={48} color="red" />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={toggleThumbsUp} activeOpacity={1}>
-          <MaterialIcons name="thumb-up-off-alt" size={48} color="green" />
-        </TouchableOpacity>
-        <Entypo name="pencil" size={48} color="white" />
-      </View>
     </View>
   );
 }
@@ -80,7 +72,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#25292e",
     alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 50,
+  },
+  questionContainer: {
+    flex: 1,
     justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
   },
   questionTextLandscape: {
     color: "white",
@@ -89,9 +88,21 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   arrowRow: {
-    display: "flex",
     flexDirection: "row",
-    marginTop: 32,
+    marginBottom: 32,
     gap: 32,
   },
 });
+
+{
+  /* <View style={styles.arrowRow}>
+        <TouchableOpacity onPress={toggleThumbsDown} activeOpacity={1}>
+          <MaterialIcons name="thumb-down-off-alt" size={48} color="red" />
+        </TouchableOpacity>
+
+        <TouchableOpacity onPress={toggleThumbsUp} activeOpacity={1}>
+          <MaterialIcons name="thumb-up-off-alt" size={48} color="green" />
+        </TouchableOpacity>
+        <Entypo name="pencil" size={48} color="white" />
+      </View> */
+}
