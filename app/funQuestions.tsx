@@ -1,12 +1,21 @@
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Button,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import questions from "../funQuestions.json";
-import { Entypo, FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
 
 export default function FunQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [showPartyModal, setShowPartyModal] = useState(false);
 
   const shuffleArray = (array: string[]) => {
     let newArray = array.slice();
@@ -37,12 +46,15 @@ export default function FunQuestions() {
       setCurrentQuestion(shuffledQuestions[nextIndex]);
     }
   };
+  const addPlayer = () => {
 
-  const toggleThumbsDown = () => {
-    console.log("THUMBS DOWN");
-  };
+  }
+
   const toggleThumbsUp = () => {
     console.log("THUMBS UP");
+  };
+  const toggleThumbsDown = () => {
+    console.log("THUMBS DOWN");
   };
 
   return (
@@ -63,6 +75,36 @@ export default function FunQuestions() {
           <Feather name="chevron-right" size={48} color="white" />
         </TouchableOpacity>
       </View>
+      <Button title="Create a Party" onPress={() => setShowPartyModal(true)} />
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showPartyModal}
+        onRequestClose={() => setShowPartyModal(false)}
+      >
+        <View style={styles.modalContainer}>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setShowPartyModal(false)}
+          >
+            <Text style={styles.closeButtonText}>X</Text>
+          </TouchableOpacity>
+          <View style={styles.formContainer}>
+            <Text style={styles.formTitle}>Create a Party</Text>
+            <TextInput style={styles.input} placeholder="Player 1" />
+            <TextInput style={styles.input} placeholder="Player 2" />
+            <Button title="+" color="white" onPress={() => addPlayer()}/>
+            <Button
+              title="Submit"
+              onPress={() => {
+                /* Handle form submission */
+              }}
+              color="white"
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -91,6 +133,48 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     marginBottom: 32,
     gap: 32,
+  },
+
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "#25292e",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    zIndex: 1,
+  },
+  closeButtonText: {
+    fontSize: 24,
+    fontWeight: "bold",
+    marginRight: 32,
+    marginTop: 32,
+    color: "white"
+  },
+  formContainer: {
+    width: "80%",
+    padding: 20,
+    borderRadius: 10,
+    backgroundColor: "#25292e",
+    elevation: 5,
+  },
+  formTitle: {
+    fontSize: 20,
+    marginBottom: 20,
+    color: "white",
+  },
+  input: {
+    width: "100%",
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    marginBottom: 15,
+    color: "white",
   },
 });
 

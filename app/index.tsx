@@ -7,32 +7,32 @@ const HomeScreen = () => {
     <View style={styles.container}>
       <Text style={styles.titleText}>Hypothetical</Text>
       <Link href="/funQuestions" asChild>
-        <Pressable style={{...styles.button, backgroundColor: '#8B0000'}}>
+        <Pressable style={{...styles.button, backgroundColor: '#007AFF'}}>
           <Text style={styles.buttonText}>Fun Questions</Text>
         </Pressable>
       </Link>
       <Link href="/deepQuestions" asChild>
-      <Pressable style={{...styles.button, backgroundColor: '#00008B'}}>
+      <Pressable style={{...styles.button, backgroundColor: '#34C759'}}>
           <Text style={styles.buttonText}>Deep Questions</Text>
         </Pressable>
       </Link>
       <Link href="/personalQuestions" asChild>
-      <Pressable style={{...styles.button, backgroundColor: '#006400'}}>
+      <Pressable style={{...styles.button, backgroundColor: '#FF3B30'}}>
           <Text style={styles.buttonText}>Personal Questions</Text>
         </Pressable>
       </Link>
       <Link href="/fantasyQuestions" asChild>
-      <Pressable style={{...styles.button, backgroundColor: '#4B0082'}}>
+      <Pressable style={{...styles.button, backgroundColor: '#FF9500'}}>
           <Text style={styles.buttonText}>Fantasy Questions</Text>
         </Pressable>
       </Link>
       <Link href="/futureQuestions" asChild>
-      <Pressable style={{...styles.button, backgroundColor: '#FF8C00'}}>
+      <Pressable style={{...styles.button, backgroundColor: '#FF2D55'}}>
           <Text style={styles.buttonText}>Future Questions</Text>
         </Pressable>
       </Link>
       <Link href="/mixupQuestions" asChild>
-      <Pressable style={{...styles.button, backgroundColor: '#3CC0CF'}}>
+      <Pressable style={{...styles.button, backgroundColor: '#5856D6'}}>
           <Text style={styles.buttonText}>Mix It Up</Text>
         </Pressable>
       </Link>
@@ -46,9 +46,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     gap: 32,
-    backgroundColor: "#25292e",
+    backgroundColor: "#1C1C1E",
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 16,
   },
   titleText: {
     color: "white",
@@ -57,8 +58,8 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   button: {
-    width: 200, // Set a fixed width
-    height: 60, // Set a fixed height
+    width: "100%", // Set a fixed width
+    height: 64, // Set a fixed height
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 4,
