@@ -46,9 +46,7 @@ export default function FunQuestions() {
       setCurrentQuestion(shuffledQuestions[nextIndex]);
     }
   };
-  const addPlayer = () => {
-
-  }
+  const addPlayer = () => {};
 
   const toggleThumbsUp = () => {
     console.log("THUMBS UP");
@@ -83,18 +81,30 @@ export default function FunQuestions() {
         visible={showPartyModal}
         onRequestClose={() => setShowPartyModal(false)}
       >
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => setShowPartyModal(false)}
+        >
+          <Text style={styles.closeButtonText}>X</Text>
+        </TouchableOpacity>
+
         <View style={styles.modalContainer}>
-          <TouchableOpacity
-            style={styles.closeButton}
-            onPress={() => setShowPartyModal(false)}
-          >
-            <Text style={styles.closeButtonText}>X</Text>
-          </TouchableOpacity>
+          <View style={styles.existingPartyButton}>
+            <Text style={styles.existingPartyButtonText}>
+              Join an Existing Party
+            </Text>
+          </View>
+
           <View style={styles.formContainer}>
             <Text style={styles.formTitle}>Create a Party</Text>
             <TextInput style={styles.input} placeholder="Player 1" />
             <TextInput style={styles.input} placeholder="Player 2" />
-            <Button title="+" color="white" onPress={() => addPlayer()}/>
+            <Pressable>
+              <Text style={styles.addPlayer}>Add a Player</Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.submitButtonContainer}>
             <Button
               title="Submit"
               onPress={() => {
@@ -136,28 +146,27 @@ const styles = StyleSheet.create({
   },
 
   modalContainer: {
+    paddingVertical: 100,
+    paddingHorizontal: 32,
     flex: 1,
     backgroundColor: "#25292e",
-    justifyContent: "center",
+    justifyContent: "space-between",
     alignItems: "center",
-    position: "relative",
   },
   closeButton: {
     position: "absolute",
-    top: 40,
-    right: 20,
+    top: 60,
+    right: 40,
     zIndex: 1,
   },
   closeButtonText: {
     fontSize: 24,
     fontWeight: "bold",
-    marginRight: 32,
-    marginTop: 32,
-    color: "white"
+    color: "white",
   },
   formContainer: {
-    width: "80%",
-    padding: 20,
+    width: "100%",
+    padding: 0,
     borderRadius: 10,
     backgroundColor: "#25292e",
     elevation: 5,
@@ -174,6 +183,29 @@ const styles = StyleSheet.create({
     borderColor: "#ccc",
     borderRadius: 5,
     marginBottom: 15,
+    color: "white",
+  },
+  addPlayer: {
+    backgroundColor: "white",
+    textAlign: "center",
+    width: "100%",
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    marginBottom: 15,
+    color: "black",
+  },
+  submitButtonContainer: {
+    marginBottom: 0,
+  },
+  existingPartyButton: {
+    alignSelf: "flex-start",
+    backgroundColor: "#3ca358",
+    padding: 8,
+    borderRadius: 8,
+  },
+  existingPartyButtonText: {
     color: "white",
   },
 });
