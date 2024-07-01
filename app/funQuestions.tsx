@@ -17,6 +17,11 @@ export default function FunQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showPartyModal, setShowPartyModal] = useState(false);
 
+  const [players, setPlayers] = useState(["", ""]);
+  const [playerLabels, setPlayerLabels] = useState(["Player 1", "Player 2"]);
+
+  const [party, setParty] = useState<string[]>([]);
+
   const shuffleArray = (array: string[]) => {
     let newArray = array.slice();
     for (let i = newArray.length - 1; i > 0; i--) {
@@ -46,8 +51,20 @@ export default function FunQuestions() {
       setCurrentQuestion(shuffledQuestions[nextIndex]);
     }
   };
-  const addPlayer = () => {};
-
+  const addPlayer = () => {
+    setPlayerLabels([...playerLabels, `Player ${playerLabels.length + 1}`]);
+    setPlayers([...players, ""]);
+  };
+  const createParty = () => {
+    const partyMembers = players.filter((player) => player !== "");
+    setParty(partyMembers);
+    setShowPartyModal(false);
+  };
+  const handlePlayerChange = (text: string, index: number) => {
+    const newPlayers = [...players];
+    newPlayers[index] = text;
+    setPlayers(newPlayers);
+  };
   const toggleThumbsUp = () => {
     console.log("THUMBS UP");
   };
@@ -73,6 +90,11 @@ export default function FunQuestions() {
           <Feather name="chevron-right" size={48} color="white" />
         </TouchableOpacity>
       </View>
+      <View style={styles.arrowRow}>
+        {party.map((partyMember) => (
+          <Text style={{ color: "white" }}>{partyMember + ", "}</Text>
+        ))}
+      </View>
       <Button title="Create a Party" onPress={() => setShowPartyModal(true)} />
 
       <Modal
@@ -83,7 +105,10 @@ export default function FunQuestions() {
       >
         <TouchableOpacity
           style={styles.closeButton}
-          onPress={() => setShowPartyModal(false)}
+          onPress={() => {
+            setShowPartyModal(false);
+            setPlayerLabels(["Player 1", "Player 2"]);
+          }}
         >
           <Text style={styles.closeButtonText}>X</Text>
         </TouchableOpacity>
@@ -96,22 +121,24 @@ export default function FunQuestions() {
           </View>
 
           <View style={styles.formContainer}>
-            <Text style={styles.formTitle}>Create a Party</Text>
-            <TextInput style={styles.input} placeholder="Player 1" />
-            <TextInput style={styles.input} placeholder="Player 2" />
-            <Pressable>
-              <Text style={styles.addPlayer}>Add a Player</Text>
-            </Pressable>
+            <View style={styles.formTitleRow}>
+              <Text style={styles.formTitle}>Create a Party</Text>
+              <Pressable onPress={addPlayer}>
+                <Text style={styles.addPlayer}>Add a Player</Text>
+              </Pressable>
+            </View>
+            {playerLabels.map((player, index) => (
+              <TextInput
+                key={index}
+                style={styles.input}
+                placeholder={player}
+                onChangeText={(text) => handlePlayerChange(text, index)}
+              />
+            ))}
           </View>
 
           <View style={styles.submitButtonContainer}>
-            <Button
-              title="Submit"
-              onPress={() => {
-                /* Handle form submission */
-              }}
-              color="white"
-            />
+            <Button title="Submit" onPress={createParty} color="white" />
           </View>
         </View>
       </Modal>
@@ -144,7 +171,11 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     gap: 32,
   },
-
+  formTitleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   modalContainer: {
     paddingVertical: 100,
     paddingHorizontal: 32,
