@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Modal,
@@ -21,6 +21,8 @@ export default function FunQuestions() {
   const [playerLabels, setPlayerLabels] = useState(["Player 1", "Player 2"]);
 
   const [party, setParty] = useState<string[]>([]);
+  const [isParty, setIsParty] = useState(false);
+  const [currentPartyIndex, setCurrentPartyIndex] = useState<number>(0);
 
   const shuffleArray = (array: string[]) => {
     let newArray = array.slice();
@@ -51,12 +53,26 @@ export default function FunQuestions() {
       setCurrentQuestion(shuffledQuestions[nextIndex]);
     }
   };
+  const previousPartyMember = () => {
+    let previousIndex = currentPartyIndex - 1;
+    if (previousIndex >= 0) {
+      setCurrentPartyIndex(previousIndex);
+    }
+  };
+  const nextPartyMember = () => {
+    let nextIndex = currentPartyIndex + 1;
+    if (nextIndex < party.length) {
+      setCurrentPartyIndex(nextIndex);
+    }
+  };
   const addPlayer = () => {
     setPlayerLabels([...playerLabels, `Player ${playerLabels.length + 1}`]);
     setPlayers([...players, ""]);
   };
   const createParty = () => {
     const partyMembers = players.filter((player) => player !== "");
+    setPlayerLabels(["Player 1", "Player 2"]);
+    setPlayers(["", ""]);
     setParty(partyMembers);
     setShowPartyModal(false);
   };
@@ -71,6 +87,14 @@ export default function FunQuestions() {
   const toggleThumbsDown = () => {
     console.log("THUMBS DOWN");
   };
+
+  useEffect(() => {
+    if (party.length > 0) {
+      setIsParty(true);
+    } else {
+      setIsParty(false);
+    }
+  }, [party]);
 
   return (
     <View style={styles.container}>
@@ -90,12 +114,45 @@ export default function FunQuestions() {
           <Feather name="chevron-right" size={48} color="white" />
         </TouchableOpacity>
       </View>
-      <View style={styles.arrowRow}>
-        {party.map((partyMember) => (
-          <Text style={{ color: "white" }}>{partyMember + ", "}</Text>
-        ))}
-      </View>
-      <Button title="Create a Party" onPress={() => setShowPartyModal(true)} />
+      {isParty ? (
+        <View style={{ flexDirection: "row" }}>
+          <TouchableOpacity
+            onPress={() =>
+              currentPartyIndex > 0 ? previousPartyMember() : null
+            }
+            activeOpacity={1}
+          >
+            <Feather
+              name="chevron-left"
+              size={48}
+              color={currentPartyIndex < 1 ? "gray" : "white"}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.showExistingPartyButton}
+            onPress={() => {}}
+          >
+            <Text>{party[currentPartyIndex]}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              currentPartyIndex < party.length - 1 ? nextPartyMember() : null
+            }
+            activeOpacity={1}
+          >
+            <Feather
+              name="chevron-right"
+              size={48}
+              color={currentPartyIndex >= party.length - 1 ? "gray" : "white"}
+            />
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <Button
+          title="Create a Party"
+          onPress={() => setShowPartyModal(true)}
+        />
+      )}
 
       <Modal
         animationType="slide"
@@ -238,6 +295,12 @@ const styles = StyleSheet.create({
   },
   existingPartyButtonText: {
     color: "white",
+  },
+  showExistingPartyButton: {
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    backgroundColor: "green",
+    borderRadius: 24,
   },
 });
 
