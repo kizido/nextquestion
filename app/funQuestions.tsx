@@ -45,12 +45,22 @@ export default function FunQuestions() {
     }
     setCurrentIndex(nextIndex);
     setCurrentQuestion(shuffledQuestions[nextIndex]);
+
+    if (isParty) {
+      setParty(shuffleArray(party));
+      setCurrentPartyIndex(0);
+    }
   };
   const previousQuestion = () => {
     let nextIndex = currentIndex - 1;
     if (nextIndex >= 0) {
       setCurrentIndex(nextIndex);
       setCurrentQuestion(shuffledQuestions[nextIndex]);
+    }
+
+    if (isParty) {
+      setParty(shuffleArray(party));
+      setCurrentPartyIndex(0);
     }
   };
   const previousPartyMember = () => {
@@ -130,7 +140,7 @@ export default function FunQuestions() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.showExistingPartyButton}
-            onPress={() => {}}
+            onPress={() => setShowPartyModal(true)}
           >
             <Text>{party[currentPartyIndex]}</Text>
           </TouchableOpacity>
@@ -298,9 +308,11 @@ const styles = StyleSheet.create({
   },
   showExistingPartyButton: {
     paddingVertical: 16,
-    paddingHorizontal: 32,
+    flexGrow: 1,
+    flexDirection: "row",
     backgroundColor: "green",
     borderRadius: 24,
+    justifyContent: "center",
   },
 });
 
