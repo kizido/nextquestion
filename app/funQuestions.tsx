@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import questions from "../funQuestions.json";
 import { Feather } from "@expo/vector-icons";
+import { create } from "react-test-renderer";
 
 export default function FunQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -86,6 +87,13 @@ export default function FunQuestions() {
     setParty(partyMembers);
     setShowPartyModal(false);
   };
+  const editParty = () => {
+    const partyMembers = players.filter((partyMember) => partyMember !== "");
+    setPlayers(["", ""]);
+    setParty(players);
+    setCurrentPartyIndex(0);
+    setShowPartyModal(false);
+  };
   const handlePlayerChange = (text: string, index: number) => {
     const newPlayers = [...players];
     newPlayers[index] = text;
@@ -113,15 +121,25 @@ export default function FunQuestions() {
       </View>
       <StatusBar style="auto" />
       <View style={styles.arrowRow}>
-        <TouchableOpacity onPress={previousQuestion} activeOpacity={1}>
-          <Feather
+        <TouchableOpacity
+          onPress={previousQuestion}
+          activeOpacity={1}
+          style={styles.nextQuestionButton}
+        >
+          {/* <Feather
             name="chevron-left"
             size={48}
             color={currentIndex < 1 ? "gray" : "white"}
-          />
+          /> */}
+          <Text>Previous Question</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={nextQuestion} activeOpacity={1}>
-          <Feather name="chevron-right" size={48} color="white" />
+        <TouchableOpacity
+          onPress={nextQuestion}
+          activeOpacity={1}
+          style={styles.nextQuestionButton}
+        >
+          {/* <Feather name="chevron-right" size={48} color="white" /> */}
+          <Text>Next Question</Text>
         </TouchableOpacity>
       </View>
       {isParty ? (
@@ -140,7 +158,14 @@ export default function FunQuestions() {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.showExistingPartyButton}
-            onPress={() => setShowPartyModal(true)}
+            onPress={
+              isParty
+                ? () => {
+                    setPlayers(party);
+                    setShowPartyModal(true);
+                  }
+                : () => setShowPartyModal(true)
+            }
           >
             <Text>{party[currentPartyIndex]}</Text>
           </TouchableOpacity>
@@ -175,6 +200,7 @@ export default function FunQuestions() {
           onPress={() => {
             setShowPartyModal(false);
             setPlayerLabels(["Player 1", "Player 2"]);
+            setPlayers(["", ""]);
           }}
         >
           <Text style={styles.closeButtonText}>X</Text>
@@ -189,23 +215,40 @@ export default function FunQuestions() {
 
           <View style={styles.formContainer}>
             <View style={styles.formTitleRow}>
-              <Text style={styles.formTitle}>Create a Party</Text>
+              <Text style={styles.formTitle}>
+                {isParty ? "Edit Party" : "Create a Party"}
+              </Text>
               <Pressable onPress={addPlayer}>
                 <Text style={styles.addPlayer}>Add a Player</Text>
               </Pressable>
             </View>
-            {playerLabels.map((player, index) => (
-              <TextInput
-                key={index}
-                style={styles.input}
-                placeholder={player}
-                onChangeText={(text) => handlePlayerChange(text, index)}
-              />
-            ))}
+            {isParty
+              ? players.map((player, index) => (
+                  <TextInput
+                    key={index}
+                    style={styles.input}
+                    value={player}
+                    placeholder={"Player " + (index + 1)}
+                    onChangeText={(text) => handlePlayerChange(text, index)}
+                  />
+                ))
+              : players.map((player, index) => (
+                  <TextInput
+                    key={index}
+                    style={styles.input}
+                    value={player}
+                    placeholder={"Player " + (index + 1)}
+                    onChangeText={(text) => handlePlayerChange(text, index)}
+                  />
+                ))}
           </View>
 
           <View style={styles.submitButtonContainer}>
-            <Button title="Submit" onPress={createParty} color="white" />
+            <Button
+              title="Submit"
+              onPress={isParty ? editParty : createParty}
+              color="white"
+            />
           </View>
         </View>
       </Modal>
@@ -293,6 +336,13 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 15,
     color: "black",
+  },
+  nextQuestionButton: {
+    backgroundColor: "white",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 144,
+    paddingVertical: 16,
   },
   submitButtonContainer: {
     marginBottom: 0,
