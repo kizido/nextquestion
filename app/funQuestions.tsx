@@ -19,7 +19,6 @@ export default function FunQuestions() {
   const [showPartyModal, setShowPartyModal] = useState(false);
 
   const [players, setPlayers] = useState(["", ""]);
-  const [playerLabels, setPlayerLabels] = useState(["Player 1", "Player 2"]);
 
   const [party, setParty] = useState<string[]>([]);
   const [isParty, setIsParty] = useState(false);
@@ -77,12 +76,10 @@ export default function FunQuestions() {
     }
   };
   const addPlayer = () => {
-    setPlayerLabels([...playerLabels, `Player ${playerLabels.length + 1}`]);
     setPlayers([...players, ""]);
   };
   const createParty = () => {
     const partyMembers = players.filter((player) => player !== "");
-    setPlayerLabels(["Player 1", "Player 2"]);
     setPlayers(["", ""]);
     setParty(partyMembers);
     setShowPartyModal(false);
@@ -90,7 +87,7 @@ export default function FunQuestions() {
   const editParty = () => {
     const partyMembers = players.filter((partyMember) => partyMember !== "");
     setPlayers(["", ""]);
-    setParty(players);
+    setParty(partyMembers);
     setCurrentPartyIndex(0);
     setShowPartyModal(false);
   };
@@ -199,7 +196,6 @@ export default function FunQuestions() {
           style={styles.closeButton}
           onPress={() => {
             setShowPartyModal(false);
-            setPlayerLabels(["Player 1", "Player 2"]);
             setPlayers(["", ""]);
           }}
         >
