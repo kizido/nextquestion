@@ -13,7 +13,8 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kizido.Hypothetical"
     },
     "android": {
       "adaptiveIcon": {
@@ -31,6 +32,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "6447c2c3-17ee-4d8e-b8f5-85f2ddaead2c"
+      }
     }
   }
 }
