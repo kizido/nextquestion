@@ -1,39 +1,40 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import React from "react";
+import React, { useEffect } from "react";
 import { Link } from "expo-router";
 
 const HomeScreen = () => {
+
   return (
     <View style={styles.container}>
-      <Text style={styles.titleText}>Hypothetical</Text>
+      <Text style={styles.titleText} maxFontSizeMultiplier={1.1}>Hypothetical</Text>
       <Link href="/funQuestions" asChild>
-        <Pressable style={{...styles.button, backgroundColor: '#007AFF'}}>
-          <Text style={styles.buttonText}>Fun Questions</Text>
+        <Pressable style={{ ...styles.button, backgroundColor: "#007AFF" }}>
+          <Text style={styles.buttonText} maxFontSizeMultiplier={1}>Fun Questions</Text>
         </Pressable>
       </Link>
       <Link href="/deepQuestions" asChild>
-      <Pressable style={{...styles.button, backgroundColor: '#34C759'}}>
-          <Text style={styles.buttonText}>Deep Questions</Text>
+        <Pressable style={{ ...styles.button, backgroundColor: "#34C759" }}>
+          <Text style={styles.buttonText} maxFontSizeMultiplier={1}>Deep Questions</Text>
         </Pressable>
       </Link>
       <Link href="/personalQuestions" asChild>
-      <Pressable style={{...styles.button, backgroundColor: '#FF3B30'}}>
-          <Text style={styles.buttonText}>Personal Questions</Text>
+        <Pressable style={{ ...styles.button, backgroundColor: "#FF3B30" }}>
+          <Text style={styles.buttonText} maxFontSizeMultiplier={1}>Personal Questions</Text>
         </Pressable>
       </Link>
       <Link href="/fantasyQuestions" asChild>
-      <Pressable style={{...styles.button, backgroundColor: '#FF9500'}}>
-          <Text style={styles.buttonText}>Fantasy Questions</Text>
+        <Pressable style={{ ...styles.button, backgroundColor: "#FF9500" }}>
+          <Text style={styles.buttonText} maxFontSizeMultiplier={1}>Fantasy Questions</Text>
         </Pressable>
       </Link>
       <Link href="/futureQuestions" asChild>
-      <Pressable style={{...styles.button, backgroundColor: '#FF2D55'}}>
-          <Text style={styles.buttonText}>Future Questions</Text>
+        <Pressable style={{ ...styles.button, backgroundColor: "#FF2D55" }}>
+          <Text style={styles.buttonText} maxFontSizeMultiplier={1}>Future Questions</Text>
         </Pressable>
       </Link>
       <Link href="/mixupQuestions" asChild>
-      <Pressable style={{...styles.button, backgroundColor: '#5856D6'}}>
-          <Text style={styles.buttonText}>Mix It Up</Text>
+        <Pressable style={{ ...styles.button, backgroundColor: "#5856D6" }}>
+          <Text style={styles.buttonText} maxFontSizeMultiplier={1}>Mix It Up</Text>
         </Pressable>
       </Link>
     </View>

@@ -12,7 +12,6 @@ import {
 } from "react-native";
 import questions from "../funQuestions.json";
 import { Feather } from "@expo/vector-icons";
-import { create } from "react-test-renderer";
 
 export default function FunQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -114,7 +113,9 @@ export default function FunQuestions() {
   return (
     <View style={styles.container}>
       <View style={styles.questionContainer}>
-        <Text style={styles.questionTextLandscape}>{currentQuestion}</Text>
+        <Text style={styles.questionText} maxFontSizeMultiplier={1.2}>
+          {currentQuestion}
+        </Text>
       </View>
       <StatusBar style="auto" />
       <View style={styles.arrowRow}>
@@ -123,12 +124,7 @@ export default function FunQuestions() {
           activeOpacity={1}
           style={styles.nextQuestionButton}
         >
-          {/* <Feather
-            name="chevron-left"
-            size={48}
-            color={currentIndex < 1 ? "gray" : "white"}
-          /> */}
-          <Text>Previous Question</Text>
+          <Text maxFontSizeMultiplier={1.2}>Previous Question</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={nextQuestion}
@@ -136,7 +132,7 @@ export default function FunQuestions() {
           style={styles.nextQuestionButton}
         >
           {/* <Feather name="chevron-right" size={48} color="white" /> */}
-          <Text>Next Question</Text>
+          <Text maxFontSizeMultiplier={1.2}>Next Question</Text>
         </TouchableOpacity>
       </View>
       {isParty ? (
@@ -180,10 +176,14 @@ export default function FunQuestions() {
           </TouchableOpacity>
         </View>
       ) : (
-        <Button
-          title="Create a Party"
+        <TouchableOpacity
           onPress={() => setShowPartyModal(true)}
-        />
+          activeOpacity={1}
+        >
+          <Text style={styles.createPartyText} maxFontSizeMultiplier={1.4}>
+            Create a Party
+          </Text>
+        </TouchableOpacity>
       )}
 
       <Modal
@@ -265,10 +265,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
+    paddingHorizontal: 50,
   },
-  questionTextLandscape: {
+  questionText: {
     color: "white",
-    marginHorizontal: 100,
     fontSize: 36,
     textAlign: "center",
   },
@@ -359,6 +359,10 @@ const styles = StyleSheet.create({
     backgroundColor: "green",
     borderRadius: 24,
     justifyContent: "center",
+  },
+  createPartyText: {
+    fontSize: 20,
+    color: "#007AFF",
   },
 });
 
