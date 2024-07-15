@@ -38,7 +38,7 @@ export default function FunQuestions() {
   const [currentQuestion, setCurrentQuestion] = useState(shuffledQuestions[0]);
 
   const nextQuestion = () => {
-    getData("player1");
+    getData("party1");
 
     let nextIndex = currentIndex + 1;
     // if (nextIndex >= shuffledQuestions.length) {
@@ -56,7 +56,7 @@ export default function FunQuestions() {
     }
   };
   const previousQuestion = () => {
-    removeValue("player1");
+    removeValue("party1");
 
     let nextIndex = currentIndex - 1;
     if (nextIndex >= 0) {
@@ -91,11 +91,23 @@ export default function FunQuestions() {
       console.log(e);
     }
   };
+  const storeObjectData = async (key: string, value: string[]) => {
+    try {
+      const jsonValue = JSON.stringify(value);
+      await AsyncStorage.setItem(key, jsonValue);
+    } catch (e) {
+      // save error
+      console.log(e);
+    }
+
+    console.log("Done.");
+  };
   const getData = async (key: string) => {
     try {
       const value = await AsyncStorage.getItem(key);
       if (value !== null) {
-        console.log("VALUE IS " + value);
+        const arrayValue = JSON.parse(value);
+        console.log("VALUE IS " + arrayValue);
       }
     } catch (e) {
       // error reading value
@@ -114,7 +126,7 @@ export default function FunQuestions() {
   };
   const createParty = () => {
     const partyMembers = players.filter((player) => player !== "");
-    storeStringData("player1", partyMembers[0]);
+    storeObjectData("party1", partyMembers);
     setPlayers(["", ""]);
     setParty(partyMembers);
     setShowPartyModal(false);
