@@ -16,7 +16,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function FunQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [showPartyModal, setShowPartyModal] = useState(false);
+  const [showCreatePartyModal, setShowCreatePartyModal] = useState(false);
+  const [showExistingPartyModal, setShowExistingPartyModal] = useState(false);
 
   const [players, setPlayers] = useState(["", ""]);
 
@@ -129,14 +130,14 @@ export default function FunQuestions() {
     storeObjectData("party1", partyMembers);
     setPlayers(["", ""]);
     setParty(partyMembers);
-    setShowPartyModal(false);
+    setShowCreatePartyModal(false);
   };
   const editParty = () => {
     const partyMembers = players.filter((partyMember) => partyMember !== "");
     setPlayers(["", ""]);
     setParty(partyMembers);
     setCurrentPartyIndex(0);
-    setShowPartyModal(false);
+    setShowCreatePartyModal(false);
   };
   const handlePlayerChange = (text: string, index: number) => {
     const newPlayers = [...players];
@@ -180,9 +181,9 @@ export default function FunQuestions() {
               isParty
                 ? () => {
                     setPlayers(party);
-                    setShowPartyModal(true);
+                    setShowCreatePartyModal(true);
                   }
-                : () => setShowPartyModal(true)
+                : () => setShowCreatePartyModal(true)
             }
           >
             <Text>{party[currentPartyIndex]}</Text>
@@ -202,7 +203,7 @@ export default function FunQuestions() {
         </View>
       ) : (
         <TouchableOpacity
-          onPress={() => setShowPartyModal(true)}
+          onPress={() => setShowCreatePartyModal(true)}
           activeOpacity={1}
           style={styles.createPartyButton}
         >
@@ -237,16 +238,89 @@ export default function FunQuestions() {
         </TouchableOpacity>
       </View>
 
+      {/* Create Party Modal */}
       <Modal
         animationType="slide"
         transparent={true}
-        visible={showPartyModal}
-        onRequestClose={() => setShowPartyModal(false)}
+        visible={showCreatePartyModal}
+        onRequestClose={() => setShowCreatePartyModal(false)}
       >
         <TouchableOpacity
           style={styles.closeButton}
           onPress={() => {
-            setShowPartyModal(false);
+            setShowCreatePartyModal(false);
+            setPlayers(["", ""]);
+          }}
+        >
+          <Text style={styles.closeButtonText}>X</Text>
+        </TouchableOpacity>
+
+        <View style={styles.modalContainer}>
+          <View style={styles.existingPartyButton}>
+            <TouchableOpacity
+              onPress={() => setShowExistingPartyModal(true)}
+              activeOpacity={1}
+            >
+              <Text
+                style={styles.existingPartyButtonText}
+                maxFontSizeMultiplier={1.2}
+              >
+                Join an Existing Party
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.formContainer}>
+            <View style={styles.formTitleRow}>
+              <Text style={styles.formTitle} maxFontSizeMultiplier={1.1}>
+                {isParty ? "Edit Party" : "Create a Party"}
+              </Text>
+              <Pressable onPress={addPlayer}>
+                <Text style={styles.addPlayer}>Add a Player</Text>
+              </Pressable>
+            </View>
+            {isParty
+              ? players.map((player, index) => (
+                  <TextInput
+                    key={index}
+                    style={styles.input}
+                    value={player}
+                    placeholder={"Player " + (index + 1)}
+                    onChangeText={(text) => handlePlayerChange(text, index)}
+                  />
+                ))
+              : players.map((player, index) => (
+                  <TextInput
+                    key={index}
+                    style={styles.input}
+                    value={player}
+                    placeholder={"Player " + (index + 1)}
+                    onChangeText={(text) => handlePlayerChange(text, index)}
+                  />
+                ))}
+          </View>
+
+          <View style={styles.submitButtonContainer}>
+            <Button
+              title="Submit"
+              onPress={isParty ? editParty : createParty}
+              color="white"
+            />
+          </View>
+        </View>
+      </Modal>
+
+      {/* Existing Party Modal */}
+      {/* <Modal
+        animationType="slide"
+        transparent={true}
+        visible={showExistingPartyModal}
+        onRequestClose={() => setShowExistingPartyModal(false)}
+      >
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => {
+            setShowExistingPartyModal(false);
             setPlayers(["", ""]);
           }}
         >
@@ -298,7 +372,7 @@ export default function FunQuestions() {
             />
           </View>
         </View>
-      </Modal>
+      </Modal> */}
     </View>
   );
 }
@@ -346,12 +420,13 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
+    padding: 8,
     top: 60,
     right: 40,
     zIndex: 1,
   },
   closeButtonText: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: "bold",
     color: "white",
   },
