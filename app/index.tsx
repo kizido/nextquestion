@@ -6,7 +6,7 @@ const HomeScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.titleText} maxFontSizeMultiplier={1.1}>Hypothetical</Text>
+      <Text style={styles.titleText} maxFontSizeMultiplier={1}>Hypothetical</Text>
       <Link href="/funQuestions" asChild>
         <Pressable style={{ ...styles.button, backgroundColor: "#007AFF" }}>
           <Text style={styles.buttonText} maxFontSizeMultiplier={1}>Fun Questions</Text>

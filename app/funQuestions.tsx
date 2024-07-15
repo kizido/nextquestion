@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import questions from "../funQuestions.json";
 import { Feather } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function FunQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -37,13 +38,17 @@ export default function FunQuestions() {
   const [currentQuestion, setCurrentQuestion] = useState(shuffledQuestions[0]);
 
   const nextQuestion = () => {
+    getData("player1");
+
     let nextIndex = currentIndex + 1;
-    if (nextIndex >= shuffledQuestions.length) {
-      setShuffledQuestions(shuffleArray(questions));
-      nextIndex = 0;
+    // if (nextIndex >= shuffledQuestions.length) {
+    //   setShuffledQuestions(shuffleArray(questions));
+    //   nextIndex = 0;
+    // }
+    if (nextIndex < questions.length) {
+      setCurrentIndex(nextIndex);
+      setCurrentQuestion(shuffledQuestions[nextIndex]);
     }
-    setCurrentIndex(nextIndex);
-    setCurrentQuestion(shuffledQuestions[nextIndex]);
 
     if (isParty) {
       setParty(shuffleArray(party));
@@ -51,6 +56,8 @@ export default function FunQuestions() {
     }
   };
   const previousQuestion = () => {
+    removeValue("player1");
+
     let nextIndex = currentIndex - 1;
     if (nextIndex >= 0) {
       setCurrentIndex(nextIndex);
@@ -77,8 +84,37 @@ export default function FunQuestions() {
   const addPlayer = () => {
     setPlayers([...players, ""]);
   };
+  const storeStringData = async (key: string, value: string) => {
+    try {
+      await AsyncStorage.setItem(key, value);
+    } catch (e) {
+      console.log(e);
+    }
+  };
+  const getData = async (key: string) => {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      if (value !== null) {
+        console.log("VALUE IS " + value);
+      }
+    } catch (e) {
+      // error reading value
+      console.log(e);
+    }
+  };
+  const removeValue = async (key: string) => {
+    try {
+      await AsyncStorage.removeItem(key);
+    } catch (e) {
+      // remove error
+      console.log(e);
+    }
+
+    console.log("Item removed.");
+  };
   const createParty = () => {
     const partyMembers = players.filter((player) => player !== "");
+    storeStringData("player1", partyMembers[0]);
     setPlayers(["", ""]);
     setParty(partyMembers);
     setShowPartyModal(false);
@@ -112,29 +148,6 @@ export default function FunQuestions() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.questionContainer}>
-        <Text style={styles.questionText} maxFontSizeMultiplier={1.2}>
-          {currentQuestion}
-        </Text>
-      </View>
-      <StatusBar style="auto" />
-      <View style={styles.arrowRow}>
-        <TouchableOpacity
-          onPress={previousQuestion}
-          activeOpacity={1}
-          style={styles.nextQuestionButton}
-        >
-          <Text maxFontSizeMultiplier={1.2}>Previous Question</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={nextQuestion}
-          activeOpacity={1}
-          style={styles.nextQuestionButton}
-        >
-          {/* <Feather name="chevron-right" size={48} color="white" /> */}
-          <Text maxFontSizeMultiplier={1.2}>Next Question</Text>
-        </TouchableOpacity>
-      </View>
       {isParty ? (
         <View style={{ flexDirection: "row" }}>
           <TouchableOpacity
@@ -179,12 +192,38 @@ export default function FunQuestions() {
         <TouchableOpacity
           onPress={() => setShowPartyModal(true)}
           activeOpacity={1}
+          style={styles.createPartyButton}
         >
-          <Text style={styles.createPartyText} maxFontSizeMultiplier={1.4}>
+          <Text style={styles.createPartyText} maxFontSizeMultiplier={1.2}>
             Create a Party
           </Text>
         </TouchableOpacity>
       )}
+      <View style={styles.questionContainer}>
+        <Text style={styles.questionText} maxFontSizeMultiplier={1.2}>
+          {currentQuestion}
+        </Text>
+      </View>
+      <StatusBar style="auto" />
+      <View style={styles.arrowRow}>
+        <TouchableOpacity onPress={previousQuestion} activeOpacity={1}>
+          <Feather
+            name="chevron-left"
+            size={48}
+            color={currentIndex < 1 ? "gray" : "white"}
+          />
+        </TouchableOpacity>
+        <Text style={{ color: "white" }}>
+          {currentIndex + 1 + "/" + questions.length}
+        </Text>
+        <TouchableOpacity onPress={nextQuestion} activeOpacity={1}>
+          <Feather
+            name="chevron-right"
+            size={48}
+            color={currentIndex >= questions.length - 1 ? "gray" : "white"}
+          />
+        </TouchableOpacity>
+      </View>
 
       <Modal
         animationType="slide"
@@ -211,7 +250,7 @@ export default function FunQuestions() {
 
           <View style={styles.formContainer}>
             <View style={styles.formTitleRow}>
-              <Text style={styles.formTitle}>
+              <Text style={styles.formTitle} maxFontSizeMultiplier={1.1}>
                 {isParty ? "Edit Party" : "Create a Party"}
               </Text>
               <Pressable onPress={addPlayer}>
@@ -258,7 +297,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#25292e",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 50,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    paddingTop: 100,
   },
   questionContainer: {
     flex: 1,
@@ -274,6 +315,7 @@ const styles = StyleSheet.create({
   },
   arrowRow: {
     flexDirection: "row",
+    alignItems: "center",
     marginBottom: 32,
     gap: 32,
   },
@@ -360,9 +402,15 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     justifyContent: "center",
   },
+  createPartyButton: {
+    alignSelf: "flex-end",
+    padding: 10,
+    backgroundColor: "#007AFF",
+    borderRadius: 20,
+  },
   createPartyText: {
     fontSize: 20,
-    color: "#007AFF",
+    color: "white",
   },
 });
 
