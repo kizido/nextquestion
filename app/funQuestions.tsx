@@ -4,6 +4,7 @@ import {
   Button,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -25,6 +26,8 @@ export default function FunQuestions() {
   const [isParty, setIsParty] = useState(false);
   const [currentPartyIndex, setCurrentPartyIndex] = useState<number>(0);
 
+  // const [parties, setParties] = useState<string[][] | null>(null);
+
   const shuffleArray = (array: string[]) => {
     let newArray = array.slice();
     for (let i = newArray.length - 1; i > 0; i--) {
@@ -39,7 +42,7 @@ export default function FunQuestions() {
   const [currentQuestion, setCurrentQuestion] = useState(shuffledQuestions[0]);
 
   const nextQuestion = () => {
-    getData("party1");
+    // getData("party1");
 
     let nextIndex = currentIndex + 1;
     // if (nextIndex >= shuffledQuestions.length) {
@@ -57,7 +60,7 @@ export default function FunQuestions() {
     }
   };
   const previousQuestion = () => {
-    removeValue("party1");
+    // removeValue("party1");
 
     let nextIndex = currentIndex - 1;
     if (nextIndex >= 0) {
@@ -85,17 +88,20 @@ export default function FunQuestions() {
   const addPlayer = () => {
     setPlayers([...players, ""]);
   };
-  const storeStringData = async (key: string, value: string) => {
+
+  const storePartyData = async (value: string[]) => {
     try {
-      await AsyncStorage.setItem(key, value);
-    } catch (e) {
-      console.log(e);
-    }
-  };
-  const storeObjectData = async (key: string, value: string[]) => {
-    try {
+      const partyCounter = await getData("partyCounter");
+      const counter = partyCounter ? parseInt(partyCounter) : 0;
+
+      const key = `party${counter + 1}`;
+
       const jsonValue = JSON.stringify(value);
       await AsyncStorage.setItem(key, jsonValue);
+
+      await AsyncStorage.setItem("partyCounter", (counter + 1).toString());
+
+      console.log("Party stored under key: " + key);
     } catch (e) {
       // save error
       console.log(e);
@@ -107,12 +113,32 @@ export default function FunQuestions() {
     try {
       const value = await AsyncStorage.getItem(key);
       if (value !== null) {
-        const arrayValue = JSON.parse(value);
-        console.log("VALUE IS " + arrayValue);
+        // const arrayValue = JSON.parse(value);
+        console.log("VALUE IS " + value);
+        return value;
       }
     } catch (e) {
       // error reading value
       console.log(e);
+    }
+  };
+  const getParties = async () => {
+    try {
+      const partyCount = await getData("partyCounter");
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const getParty = async (key: string) => {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      if (value !== null) {
+        const parsedValue = JSON.parse(value);
+        return parsedValue;
+      }
+      return null;
+    } catch (error) {
+      console.log(error);
     }
   };
   const removeValue = async (key: string) => {
@@ -127,7 +153,8 @@ export default function FunQuestions() {
   };
   const createParty = () => {
     const partyMembers = players.filter((player) => player !== "");
-    storeObjectData("party1", partyMembers);
+    // storeObjectData("party1", partyMembers);
+    storePartyData(partyMembers);
     setPlayers(["", ""]);
     setParty(partyMembers);
     setShowPartyModal(false);
@@ -252,11 +279,11 @@ export default function FunQuestions() {
             setPlayers(["", ""]);
           }}
         >
-          <Text style={styles.closeButtonText}>X</Text>
+          <Text style={styles.closeButtonText} maxFontSizeMultiplier={1.1}>X</Text>
         </TouchableOpacity>
 
         <View style={styles.modalContainer}>
-          <View style={styles.existingPartyButton}>
+          {/* <View style={styles.existingPartyButton}>
             <TouchableOpacity
               onPress={() => setShowExistingParties(!showExistingParties)}
               activeOpacity={1}
@@ -271,7 +298,7 @@ export default function FunQuestions() {
                   : "Create a New Party"}
               </Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           {!showExistingParties ? (
             <View style={styles.formContainer}>
@@ -283,15 +310,24 @@ export default function FunQuestions() {
                   <Text style={styles.addPlayer}>Add a Player</Text>
                 </Pressable>
               </View>
-              {players.map((player, index) => (
-                <TextInput
-                  key={index}
-                  style={styles.input}
-                  value={player}
-                  placeholder={"Player " + (index + 1)}
-                  onChangeText={(text) => handlePlayerChange(text, index)}
+              <ScrollView style={styles.partyMembersContainer} showsVerticalScrollIndicator={true}>
+                {players.map((player, index) => (
+                  <TextInput
+                    key={index}
+                    style={styles.input}
+                    value={player}
+                    placeholder={"Player " + (index + 1)}
+                    onChangeText={(text) => handlePlayerChange(text, index)}
+                  />
+                ))}
+              </ScrollView>
+              <View style={styles.submitButtonContainer}>
+                <Button
+                  title="Submit"
+                  onPress={isParty ? editParty : createParty}
+                  color="black"
                 />
-              ))}
+              </View>
             </View>
           ) : (
             <View style={styles.formContainer}>
@@ -311,14 +347,6 @@ export default function FunQuestions() {
               ))} */}
             </View>
           )}
-
-          <View style={styles.submitButtonContainer}>
-            <Button
-              title="Submit"
-              onPress={isParty ? editParty : createParty}
-              color="white"
-            />
-          </View>
         </View>
       </Modal>
     </View>
@@ -333,7 +361,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingBottom: 20,
-    paddingTop: 100,
+    paddingTop: 24,
   },
   questionContainer: {
     flex: 1,
@@ -359,7 +387,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContainer: {
-    paddingVertical: 100,
+    paddingTop: 120,
+    paddingBottom: 32,
     paddingHorizontal: 32,
     flex: 1,
     backgroundColor: "#25292e",
@@ -380,15 +409,21 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: "100%",
-    padding: 0,
-    borderRadius: 10,
     backgroundColor: "#25292e",
-    elevation: 5,
+    flex: 1,
+    gap: 32,
   },
   formTitle: {
     fontSize: 20,
     marginBottom: 20,
     color: "white",
+  },
+  partyMembersContainer: {
+    padding: 8,
+    overflow: "scroll",
+    // borderColor: "black",
+    // borderWidth: 4,
+    flexGrow: 1,
   },
   input: {
     width: "100%",
@@ -418,7 +453,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   submitButtonContainer: {
-    marginBottom: 0,
+    backgroundColor: "white",
+    paddingHorizontal: 32,
   },
   existingPartyButton: {
     alignSelf: "flex-start",
@@ -439,12 +475,12 @@ const styles = StyleSheet.create({
   },
   createPartyButton: {
     alignSelf: "flex-end",
-    padding: 10,
+    padding: 12,
     backgroundColor: "#007AFF",
-    borderRadius: 20,
+    borderRadius: 8,
   },
   createPartyText: {
-    fontSize: 20,
+    fontSize: 16,
     color: "white",
   },
 });
