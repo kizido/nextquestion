@@ -18,7 +18,7 @@ const questions = [
   ...futureQuestions,
 ];
 
-export default function FunQuestions() {
+export default function MixupQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showPartyModal, setShowPartyModal] = useState(false);
   const [showExistingParties, setShowExistingParties] = useState(false);
@@ -192,18 +192,27 @@ export default function FunQuestions() {
   return (
     <View style={styles.container}>
       {isParty ? (
-        <View style={{ flexDirection: "row" }}>
+        <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
           <TouchableOpacity
             onPress={() =>
               currentPartyIndex > 0 ? previousPartyMember() : null
             }
             activeOpacity={1}
           >
-            <Feather
+            {/* <Feather
               name="chevron-left"
               size={48}
               color={currentPartyIndex < 1 ? "gray" : "white"}
-            />
+            /> */}
+            <Text
+              style={{
+                color: currentPartyIndex < 1 ? "gray" : "white",
+                fontSize: 48,
+              }}
+              maxFontSizeMultiplier={1.1}
+            >
+              &lt;
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.showExistingPartyButton}
@@ -224,11 +233,20 @@ export default function FunQuestions() {
             }
             activeOpacity={1}
           >
-            <Feather
+            {/* <Feather
               name="chevron-right"
               size={48}
               color={currentPartyIndex >= party.length - 1 ? "gray" : "white"}
-            />
+            /> */}
+            <Text
+              style={{
+                color: currentPartyIndex >= party.length - 1 ? "gray" : "white",
+                fontSize: 48,
+              }}
+              maxFontSizeMultiplier={1.1}
+            >
+              &gt;
+            </Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -250,21 +268,36 @@ export default function FunQuestions() {
       <StatusBar style="auto" />
       <View style={styles.arrowRow}>
         <TouchableOpacity onPress={previousQuestion} activeOpacity={1}>
-          <Feather
+          {/* <Feather
             name="chevron-left"
             size={48}
             color={currentIndex < 1 ? "gray" : "white"}
-          />
+          /> */}
+          <Text
+            style={{ color: currentIndex < 1 ? "gray" : "white", fontSize: 64 }}
+            maxFontSizeMultiplier={1.1}
+          >
+            &lt;
+          </Text>
         </TouchableOpacity>
         <Text style={{ color: "white" }}>
           {currentIndex + 1 + "/" + questions.length}
         </Text>
         <TouchableOpacity onPress={nextQuestion} activeOpacity={1}>
-          <Feather
+          {/* <Feather
             name="chevron-right"
             size={48}
             color={currentIndex >= questions.length - 1 ? "gray" : "white"}
-          />
+          /> */}
+          <Text
+            style={{
+              color: currentIndex >= questions.length - 1 ? "gray" : "white",
+              fontSize: 64,
+            }}
+            maxFontSizeMultiplier={1.1}
+          >
+            &gt;
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -282,7 +315,9 @@ export default function FunQuestions() {
             setPlayers(["", ""]);
           }}
         >
-          <Text style={styles.closeButtonText} maxFontSizeMultiplier={1.1}>X</Text>
+          <Text style={styles.closeButtonText} maxFontSizeMultiplier={1.1}>
+            X
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.modalContainer}>
@@ -313,7 +348,10 @@ export default function FunQuestions() {
                   <Text style={styles.addPlayer}>Add a Player</Text>
                 </Pressable>
               </View>
-              <ScrollView style={styles.partyMembersContainer} showsVerticalScrollIndicator={true}>
+              <ScrollView
+                style={styles.partyMembersContainer}
+                showsVerticalScrollIndicator={true}
+              >
                 {players.map((player, index) => (
                   <TextInput
                     key={index}
@@ -472,7 +510,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     flexGrow: 1,
     flexDirection: "row",
-    backgroundColor: "green",
+    backgroundColor: "#007AFF",
     borderRadius: 24,
     justifyContent: "center",
   },
