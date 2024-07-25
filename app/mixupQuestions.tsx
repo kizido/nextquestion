@@ -21,7 +21,6 @@ const questions = [
 export default function MixupQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showPartyModal, setShowPartyModal] = useState(false);
-  const [showExistingParties, setShowExistingParties] = useState(false);
 
   const [players, setPlayers] = useState(["", ""]);
 
@@ -29,6 +28,7 @@ export default function MixupQuestions() {
   const [isParty, setIsParty] = useState(false);
   const [currentPartyIndex, setCurrentPartyIndex] = useState<number>(0);
 
+  const [showExistingParties, setShowExistingParties] = useState(false);
   // const [parties, setParties] = useState<string[][] | null>(null);
 
   const shuffleArray = (array: string[]) => {
@@ -63,7 +63,7 @@ export default function MixupQuestions() {
     }
   };
   const previousQuestion = () => {
-    // removeValue("party1");
+    removeParty();
 
     let nextIndex = currentIndex - 1;
     if (nextIndex >= 0) {
@@ -92,61 +92,52 @@ export default function MixupQuestions() {
     setPlayers([...players, ""]);
   };
 
+  // const storePartyData = async (value: string[]) => {
+  //   try {
+  //     const partyCounter = await getData("partyCounter");
+  //     const counter = partyCounter ? parseInt(partyCounter) : 0;
+
+  //     const key = `party${counter + 1}`;
+
+  //     const jsonValue = JSON.stringify(value);
+  //     await AsyncStorage.setItem(key, jsonValue);
+
+  //     await AsyncStorage.setItem("partyCounter", (counter + 1).toString());
+
+  //     console.log("Party stored under key: " + key);
+  //   } catch (e) {
+  //     // save error
+  //     console.log(e);
+  //   }
+
+  //   console.log("Done.");
+  // };
   const storePartyData = async (value: string[]) => {
     try {
-      const partyCounter = await getData("partyCounter");
-      const counter = partyCounter ? parseInt(partyCounter) : 0;
+      await AsyncStorage.setItem("party", JSON.stringify(value));
 
-      const key = `party${counter + 1}`;
-
-      const jsonValue = JSON.stringify(value);
-      await AsyncStorage.setItem(key, jsonValue);
-
-      await AsyncStorage.setItem("partyCounter", (counter + 1).toString());
-
-      console.log("Party stored under key: " + key);
-    } catch (e) {
-      // save error
-      console.log(e);
+    } catch (error) {
+      console.log(error);
     }
-
-    console.log("Done.");
   };
-  const getData = async (key: string) => {
+  const getParty = async () => {
     try {
-      const value = await AsyncStorage.getItem(key);
+      const value = await AsyncStorage.getItem("party");
       if (value !== null) {
-        // const arrayValue = JSON.parse(value);
-        console.log("VALUE IS " + value);
-        return value;
+        // console.log("VALUE IS " + value);
+        const arrayValue = JSON.parse(value);
+        setParty(arrayValue);
       }
     } catch (e) {
       // error reading value
       console.log(e);
     }
   };
-  const getParties = async () => {
+  const removeParty = async () => {
     try {
-      const partyCount = await getData("partyCounter");
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const getParty = async (key: string) => {
-    try {
-      const value = await AsyncStorage.getItem(key);
-      if (value !== null) {
-        const parsedValue = JSON.parse(value);
-        return parsedValue;
-      }
-      return null;
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const removeValue = async (key: string) => {
-    try {
-      await AsyncStorage.removeItem(key);
+      await AsyncStorage.removeItem("party");
+      setParty([]);
+      setIsParty(false);
     } catch (e) {
       // remove error
       console.log(e);
@@ -154,20 +145,42 @@ export default function MixupQuestions() {
 
     console.log("Item removed.");
   };
+
+  // const getParties = async () => {
+  //   try {
+  //     const partyCount = await getData("partyCounter");
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
+
+  // const getParty = async (key: string) => {
+  //   try {
+  //     const value = await AsyncStorage.getItem(key);
+  //     if (value !== null) {
+  //       const parsedValue = JSON.parse(value);
+  //       return parsedValue;
+  //     }
+  //     return null;
+  //   } catch (error) {
+  //     console.log(error);
+  //   }
+  // };
+
   const createParty = () => {
-    const partyMembers = players.filter((player) => player !== "");
-    // storeObjectData("party1", partyMembers);
+    const partyMembers = players.filter((partyMember) => partyMember !== "");
+    storePartyData(partyMembers);
+    setPlayers(["", ""]);
+    setParty(partyMembers);
+    setShowPartyModal(false); 
+  };
+  const editParty = () => {
+    const partyMembers = players.filter((partyMember) => partyMember !== "");
     storePartyData(partyMembers);
     setPlayers(["", ""]);
     setParty(partyMembers);
     setShowPartyModal(false);
-  };
-  const editParty = () => {
-    const partyMembers = players.filter((partyMember) => partyMember !== "");
-    setPlayers(["", ""]);
-    setParty(partyMembers);
     setCurrentPartyIndex(0);
-    setShowPartyModal(false);
   };
   const handlePlayerChange = (text: string, index: number) => {
     const newPlayers = [...players];
@@ -181,6 +194,9 @@ export default function MixupQuestions() {
     console.log("THUMBS DOWN");
   };
 
+  useEffect(() => {
+    getParty();
+  }, [])
   useEffect(() => {
     if (party.length > 0) {
       setIsParty(true);
