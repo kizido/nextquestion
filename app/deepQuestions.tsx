@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import questions from "../deepQuestions.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Feather } from "@expo/vector-icons";
+// import { Feather } from "@expo/vector-icons";
 
 export default function DeepQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);

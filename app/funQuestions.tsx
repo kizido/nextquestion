@@ -111,15 +111,14 @@ export default function FunQuestions() {
   // };
   const storePartyData = async (value: string[]) => {
     try {
-      await AsyncStorage.setItem("party", JSON.stringify(value));
-
+      await AsyncStorage.setItem("currentParty", JSON.stringify(value));
     } catch (error) {
       console.log(error);
     }
   };
   const getParty = async () => {
     try {
-      const value = await AsyncStorage.getItem("party");
+      const value = await AsyncStorage.getItem("currentParty");
       if (value !== null) {
         // console.log("VALUE IS " + value);
         const arrayValue = JSON.parse(value);
@@ -132,14 +131,13 @@ export default function FunQuestions() {
   };
   const removeParty = async () => {
     try {
-      await AsyncStorage.removeItem("party");
+      await AsyncStorage.removeItem("currentParty");
       setParty([]);
       setIsParty(false);
     } catch (e) {
       // remove error
       console.log(e);
     }
-
     console.log("Item removed.");
   };
 
@@ -169,7 +167,7 @@ export default function FunQuestions() {
     storePartyData(partyMembers);
     setPlayers(["", ""]);
     setParty(partyMembers);
-    setShowPartyModal(false); 
+    setShowPartyModal(false);
   };
   const editParty = () => {
     const partyMembers = players.filter((partyMember) => partyMember !== "");
@@ -184,16 +182,39 @@ export default function FunQuestions() {
     newPlayers[index] = text;
     setPlayers(newPlayers);
   };
-  const toggleThumbsUp = () => {
-    console.log("THUMBS UP");
+  const getFirstAvailablePartyKey = async () => {
+    try {
+      let index = 0;
+      while (true) {
+        const value = await AsyncStorage.getItem(`party${index}`);
+        if (value === null) {
+          return index;
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
-  const toggleThumbsDown = () => {
-    console.log("THUMBS DOWN");
+  const storeCurrentParty = async () => {
+    try {
+      const storageKey = getFirstAvailablePartyKey();
+      await AsyncStorage.setItem(`party${storageKey}`, JSON.stringify(party));
+      setPlayers(["", ""]);
+      setIsParty(false);
+    } catch (error) {
+      console.log(error);
+    }
   };
+  // const toggleThumbsUp = () => {
+  //   console.log("THUMBS UP");
+  // };
+  // const toggleThumbsDown = () => {
+  //   console.log("THUMBS DOWN");
+  // };
 
   useEffect(() => {
     getParty();
-  }, [])
+  }, []);
   useEffect(() => {
     if (party.length > 0) {
       setIsParty(true);
@@ -325,6 +346,7 @@ export default function FunQuestions() {
           style={styles.closeButton}
           onPress={() => {
             setShowPartyModal(false);
+            setShowExistingParties(false);
             setPlayers(["", ""]);
           }}
         >
@@ -353,6 +375,24 @@ export default function FunQuestions() {
 
           {!showExistingParties ? (
             <View style={styles.formContainer}>
+              <View style={styles.formTitleRow}>
+                <View style={styles.partySelectButton}>
+                  <Button
+                    title="Select a Party"
+                    onPress={() => setShowExistingParties(true)}
+                    color="white"
+                  />
+                </View>
+                {isParty && (
+                  <View style={styles.partySelectButton}>
+                    <Button
+                      title="Create a New Party"
+                      onPress={storeCurrentParty}
+                      color="white"
+                    />
+                  </View>
+                )}
+              </View>
               <View style={styles.formTitleRow}>
                 <Text style={styles.formTitle} maxFontSizeMultiplier={1.1}>
                   {isParty ? "Edit Party" : "Create a Party"}
@@ -385,11 +425,19 @@ export default function FunQuestions() {
             </View>
           ) : (
             <View style={styles.formContainer}>
+              <View style={styles.selectPartyRow}>
+                <Button
+                  title="Create/Edit Party"
+                  onPress={() => setShowExistingParties(false)}
+                  color="#007AFF"
+                />
+              </View>
               <View style={styles.formTitleRow}>
                 <Text style={styles.formTitle} maxFontSizeMultiplier={1.1}>
                   Select a Party
                 </Text>
               </View>
+              {}
               {/* {players.map((player, index) => (
                 <TextInput
                   key={index}
@@ -435,6 +483,14 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     gap: 32,
   },
+  selectPartyRow: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+  partySelectButton: {
+    backgroundColor: "#007AFF",
+  },
   formTitleRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -465,7 +521,7 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "#25292e",
     flex: 1,
-    gap: 32,
+    gap: 0,
   },
   formTitle: {
     fontSize: 20,
@@ -551,3 +607,14 @@ const styles = StyleSheet.create({
         <Entypo name="pencil" size={48} color="white" />
       </View> */
 }
+
+// - party selection
+// 	- edit -> create
+// 		- multiget party0-4, store first null
+// 		- store current in the stored first null
+// 		- empty players
+// 		- turn off isparty
+// 	- edit/create -> select
+// 		- fetch batch party0 - party4
+// 		- whichever is clicked, swap party# to current
+// 		- if preexisting current party, swap current to party#
