@@ -15,6 +15,10 @@ import questions from "../funQuestions.json";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// interface KeyArrayPair {
+//   [key: number]: string[];
+// }
+
 export default function FunQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showPartyModal, setShowPartyModal] = useState(false);
@@ -26,7 +30,7 @@ export default function FunQuestions() {
   const [currentPartyIndex, setCurrentPartyIndex] = useState<number>(0);
 
   const [showExistingParties, setShowExistingParties] = useState(false);
-  // const [parties, setParties] = useState<string[][] | null>(null);
+  const [loadedParties, setLoadedParties] = useState<string[][]>([]);
 
   const shuffleArray = (array: string[]) => {
     let newArray = array.slice();
@@ -42,7 +46,7 @@ export default function FunQuestions() {
   const [currentQuestion, setCurrentQuestion] = useState(shuffledQuestions[0]);
 
   const nextQuestion = () => {
-    // getData("party1");
+    console.log(getData("party1"));
 
     let nextIndex = currentIndex + 1;
     // if (nextIndex >= shuffledQuestions.length) {
@@ -60,7 +64,7 @@ export default function FunQuestions() {
     }
   };
   const previousQuestion = () => {
-    removeParty();
+    // removeParty();
 
     let nextIndex = currentIndex - 1;
     if (nextIndex >= 0) {
@@ -109,6 +113,18 @@ export default function FunQuestions() {
 
   //   console.log("Done.");
   // };
+  const getData = async (key: string) => {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      if (value !== null) {
+        return JSON.parse(value);
+      }
+      // AsyncStorage.clear();
+    } catch (error) {
+      console.log(error);
+    }
+    return null;
+  };
   const storePartyData = async (value: string[]) => {
     try {
       await AsyncStorage.setItem("currentParty", JSON.stringify(value));
@@ -116,11 +132,10 @@ export default function FunQuestions() {
       console.log(error);
     }
   };
-  const getParty = async () => {
+  const getCurrentParty = async () => {
     try {
       const value = await AsyncStorage.getItem("currentParty");
       if (value !== null) {
-        // console.log("VALUE IS " + value);
         const arrayValue = JSON.parse(value);
         setParty(arrayValue);
       }
@@ -131,6 +146,7 @@ export default function FunQuestions() {
   };
   const removeParty = async () => {
     try {
+      // await AsyncStorage.clear();
       await AsyncStorage.removeItem("currentParty");
       setParty([]);
       setIsParty(false);
@@ -188,8 +204,10 @@ export default function FunQuestions() {
       while (true) {
         const value = await AsyncStorage.getItem(`party${index}`);
         if (value === null) {
+          console.log("INDEX FOUND: " + index);
           return index;
         }
+        index++;
       }
     } catch (error) {
       console.log(error);
@@ -197,10 +215,50 @@ export default function FunQuestions() {
   };
   const storeCurrentParty = async () => {
     try {
-      const storageKey = getFirstAvailablePartyKey();
+      const storageKey = await getFirstAvailablePartyKey();
+      console.log(
+        "key: " + "party" + storageKey + ", value: " + JSON.stringify(party)
+      );
       await AsyncStorage.setItem(`party${storageKey}`, JSON.stringify(party));
       setPlayers(["", ""]);
+      setParty([]);
       setIsParty(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const loadPartySelection = async () => {
+    try {
+      let partiesLoaded: string[][] = [];
+      let index = 0;
+      while (true) {
+        const value = await AsyncStorage.getItem(`party${index}`);
+        console.log("Value " + index + ": " + value);
+        if (value === null) {
+          setLoadedParties(partiesLoaded);
+          break;
+        }
+        partiesLoaded[index] = JSON.parse(value);
+        index++;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const loadSelectedParty = async (idx: number, loadedParty: string[]) => {
+    try {
+      await AsyncStorage.setItem("currentParty", JSON.stringify(loadedParty));
+      if (isParty) {
+        await AsyncStorage.setItem(`party${idx}`, JSON.stringify(party));
+      } else {
+        // if there is no current party, there will be a gap created in the storage indexes
+        // in this case, 2 OPTIONS
+        // 1. LEAVE AS IS, and have a duplicate selection option to the current party
+        // 2. loop through the parties after the gap and push them back by 1 index, closing the gap
+      }
+      setParty(loadedParty);
+      setShowExistingParties(false);
+      setShowPartyModal(false);
     } catch (error) {
       console.log(error);
     }
@@ -213,7 +271,7 @@ export default function FunQuestions() {
   // };
 
   useEffect(() => {
-    getParty();
+    getCurrentParty();
   }, []);
   useEffect(() => {
     if (party.length > 0) {
@@ -376,20 +434,25 @@ export default function FunQuestions() {
           {!showExistingParties ? (
             <View style={styles.formContainer}>
               <View style={styles.formTitleRow}>
-                <View style={styles.partySelectButton}>
-                  <Button
-                    title="Select a Party"
-                    onPress={() => setShowExistingParties(true)}
-                    color="white"
-                  />
+                <View style={styles.partySelectMenuButton}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      loadPartySelection();
+                      setShowExistingParties(true);
+                    }}
+                    style={{ padding: 8 }}
+                  >
+                    <Text style={{ color: "white" }} maxFontSizeMultiplier={1.4}>Select a Party</Text>
+                  </TouchableOpacity>
                 </View>
                 {isParty && (
-                  <View style={styles.partySelectButton}>
-                    <Button
-                      title="Create a New Party"
+                  <View style={styles.partySelectMenuButton}>
+                    <TouchableOpacity
                       onPress={storeCurrentParty}
-                      color="white"
-                    />
+                      style={{ padding: 8 }}
+                    >
+                      <Text style={{ color: "white" }} maxFontSizeMultiplier={1.4}>Create a New Party</Text>
+                    </TouchableOpacity>
                   </View>
                 )}
               </View>
@@ -425,11 +488,11 @@ export default function FunQuestions() {
             </View>
           ) : (
             <View style={styles.formContainer}>
-              <View style={styles.selectPartyRow}>
+              <View style={styles.partySelectMenuButton}>
                 <Button
                   title="Create/Edit Party"
                   onPress={() => setShowExistingParties(false)}
-                  color="#007AFF"
+                  color="white"
                 />
               </View>
               <View style={styles.formTitleRow}>
@@ -437,16 +500,24 @@ export default function FunQuestions() {
                   Select a Party
                 </Text>
               </View>
-              {}
-              {/* {players.map((player, index) => (
-                <TextInput
-                  key={index}
-                  style={styles.input}
-                  value={player}
-                  placeholder={"Player " + (index + 1)}
-                  onChangeText={(text) => handlePlayerChange(text, index)}
-                />
-              ))} */}
+              <View style={styles.partySelectionColumn}>
+                {loadedParties.length < 1 && (
+                  <Text style={{ color: "gray", fontSize: 16 }}>
+                    No available parties
+                  </Text>
+                )}
+                {loadedParties.map((loadedParty, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    style={styles.partySelectButton}
+                    onPress={() => loadSelectedParty(idx, loadedParty)}
+                  >
+                    <View style={styles.partySelectButtonContainer}>
+                      <Text numberOfLines={1}>{loadedParty.join(", ")}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
             </View>
           )}
         </View>
@@ -488,13 +559,37 @@ const styles = StyleSheet.create({
     justifyContent: "flex-start",
     alignItems: "center",
   },
-  partySelectButton: {
+  partySelectMenuButton: {
     backgroundColor: "#007AFF",
   },
+  partySelectionColumn: {
+    flex: 1,
+    flexDirection: "column",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    width: "100%",
+    gap: 24,
+  },
+  partySelectButton: {
+    backgroundColor: "white",
+    padding: 16,
+    width: "100%",
+    flexDirection: "row",
+    gap: 8,
+    borderRadius: 8,
+  },
+  partySelectButtonContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   formTitleRow: {
+    marginTop: 8,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 8,
   },
   modalContainer: {
     paddingTop: 120,
@@ -608,13 +703,4 @@ const styles = StyleSheet.create({
       </View> */
 }
 
-// - party selection
-// 	- edit -> create
-// 		- multiget party0-4, store first null
-// 		- store current in the stored first null
-// 		- empty players
-// 		- turn off isparty
-// 	- edit/create -> select
-// 		- fetch batch party0 - party4
-// 		- whichever is clicked, swap party# to current
-// 		- if preexisting current party, swap current to party#
+// BUG WHEN SELECTING WHILE NO PARTY ACTIVE, DUPLICATES PARTY SELECTOR ON A NEW STORAGE KEY
