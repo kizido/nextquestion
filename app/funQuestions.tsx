@@ -12,12 +12,7 @@ import {
   View,
 } from "react-native";
 import questions from "../funQuestions.json";
-import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
-// interface KeyArrayPair {
-//   [key: number]: string[];
-// }
 
 export default function FunQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -49,10 +44,7 @@ export default function FunQuestions() {
     console.log(getData("party1"));
 
     let nextIndex = currentIndex + 1;
-    // if (nextIndex >= shuffledQuestions.length) {
-    //   setShuffledQuestions(shuffleArray(questions));
-    //   nextIndex = 0;
-    // }
+
     if (nextIndex < questions.length) {
       setCurrentIndex(nextIndex);
       setCurrentQuestion(shuffledQuestions[nextIndex]);
@@ -64,7 +56,7 @@ export default function FunQuestions() {
     }
   };
   const previousQuestion = () => {
-    // removeParty();
+    removeParty();
 
     let nextIndex = currentIndex - 1;
     if (nextIndex >= 0) {
@@ -92,34 +84,12 @@ export default function FunQuestions() {
   const addPlayer = () => {
     setPlayers([...players, ""]);
   };
-
-  // const storePartyData = async (value: string[]) => {
-  //   try {
-  //     const partyCounter = await getData("partyCounter");
-  //     const counter = partyCounter ? parseInt(partyCounter) : 0;
-
-  //     const key = `party${counter + 1}`;
-
-  //     const jsonValue = JSON.stringify(value);
-  //     await AsyncStorage.setItem(key, jsonValue);
-
-  //     await AsyncStorage.setItem("partyCounter", (counter + 1).toString());
-
-  //     console.log("Party stored under key: " + key);
-  //   } catch (e) {
-  //     // save error
-  //     console.log(e);
-  //   }
-
-  //   console.log("Done.");
-  // };
   const getData = async (key: string) => {
     try {
       const value = await AsyncStorage.getItem(key);
       if (value !== null) {
         return JSON.parse(value);
       }
-      // AsyncStorage.clear();
     } catch (error) {
       console.log(error);
     }
@@ -140,44 +110,20 @@ export default function FunQuestions() {
         setParty(arrayValue);
       }
     } catch (e) {
-      // error reading value
       console.log(e);
     }
   };
   const removeParty = async () => {
     try {
-      // await AsyncStorage.clear();
+      await AsyncStorage.clear();
       await AsyncStorage.removeItem("currentParty");
       setParty([]);
       setIsParty(false);
     } catch (e) {
-      // remove error
       console.log(e);
     }
     console.log("Item removed.");
   };
-
-  // const getParties = async () => {
-  //   try {
-  //     const partyCount = await getData("partyCounter");
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-
-  // const getParty = async (key: string) => {
-  //   try {
-  //     const value = await AsyncStorage.getItem(key);
-  //     if (value !== null) {
-  //       const parsedValue = JSON.parse(value);
-  //       return parsedValue;
-  //     }
-  //     return null;
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-
   const createParty = () => {
     const partyMembers = players.filter((partyMember) => partyMember !== "");
     storePartyData(partyMembers);
@@ -251,10 +197,17 @@ export default function FunQuestions() {
       if (isParty) {
         await AsyncStorage.setItem(`party${idx}`, JSON.stringify(party));
       } else {
-        // if there is no current party, there will be a gap created in the storage indexes
-        // in this case, 2 OPTIONS
-        // 1. LEAVE AS IS, and have a duplicate selection option to the current party
-        // 2. loop through the parties after the gap and push them back by 1 index, closing the gap
+        await AsyncStorage.removeItem(`party${idx}`);
+        idx = idx + 1;
+        while (true) {
+          const storedValue = await AsyncStorage.getItem(`party${idx}`);
+          if (storedValue === null) {
+            break;
+          }
+          await AsyncStorage.removeItem(`party${idx}`);
+          await AsyncStorage.setItem(`party${idx - 1}`, storedValue);
+          idx++;
+        }
       }
       setParty(loadedParty);
       setShowExistingParties(false);
@@ -263,12 +216,6 @@ export default function FunQuestions() {
       console.log(error);
     }
   };
-  // const toggleThumbsUp = () => {
-  //   console.log("THUMBS UP");
-  // };
-  // const toggleThumbsDown = () => {
-  //   console.log("THUMBS DOWN");
-  // };
 
   useEffect(() => {
     getCurrentParty();
@@ -280,6 +227,11 @@ export default function FunQuestions() {
       setIsParty(false);
     }
   }, [party]);
+  useEffect(() => {
+    if (showPartyModal) {
+      loadPartySelection();
+    }
+  }, [showPartyModal]);
 
   return (
     <View style={styles.container}>
@@ -291,11 +243,6 @@ export default function FunQuestions() {
             }
             activeOpacity={1}
           >
-            {/* <Feather
-              name="chevron-left"
-              size={48}
-              color={currentPartyIndex < 1 ? "gray" : "white"}
-            /> */}
             <Text
               style={{
                 color: currentPartyIndex < 1 ? "gray" : "white",
@@ -325,11 +272,6 @@ export default function FunQuestions() {
             }
             activeOpacity={1}
           >
-            {/* <Feather
-              name="chevron-right"
-              size={48}
-              color={currentPartyIndex >= party.length - 1 ? "gray" : "white"}
-            /> */}
             <Text
               style={{
                 color: currentPartyIndex >= party.length - 1 ? "gray" : "white",
@@ -360,11 +302,6 @@ export default function FunQuestions() {
       <StatusBar style="auto" />
       <View style={styles.arrowRow}>
         <TouchableOpacity onPress={previousQuestion} activeOpacity={1}>
-          {/* <Feather
-            name="chevron-left"
-            size={48}
-            color={currentIndex < 1 ? "gray" : "white"}
-          /> */}
           <Text
             style={{ color: currentIndex < 1 ? "gray" : "white", fontSize: 64 }}
             maxFontSizeMultiplier={1.1}
@@ -376,11 +313,6 @@ export default function FunQuestions() {
           {currentIndex + 1 + "/" + questions.length}
         </Text>
         <TouchableOpacity onPress={nextQuestion} activeOpacity={1}>
-          {/* <Feather
-            name="chevron-right"
-            size={48}
-            color={currentIndex >= questions.length - 1 ? "gray" : "white"}
-          /> */}
           <Text
             style={{
               color: currentIndex >= questions.length - 1 ? "gray" : "white",
@@ -414,35 +346,22 @@ export default function FunQuestions() {
         </TouchableOpacity>
 
         <View style={styles.modalContainer}>
-          {/* <View style={styles.existingPartyButton}>
-            <TouchableOpacity
-              onPress={() => setShowExistingParties(!showExistingParties)}
-              activeOpacity={1}
-              style={{ padding: 6 }}
-            >
-              <Text
-                style={styles.existingPartyButtonText}
-                maxFontSizeMultiplier={1.2}
-              >
-                {!showExistingParties
-                  ? "Join an Existing Party"
-                  : "Create a New Party"}
-              </Text>
-            </TouchableOpacity>
-          </View> */}
-
           {!showExistingParties ? (
             <View style={styles.formContainer}>
               <View style={styles.formTitleRow}>
                 <View style={styles.partySelectMenuButton}>
                   <TouchableOpacity
                     onPress={() => {
-                      loadPartySelection();
                       setShowExistingParties(true);
                     }}
                     style={{ padding: 8 }}
                   >
-                    <Text style={{ color: "white" }} maxFontSizeMultiplier={1.4}>Select a Party</Text>
+                    <Text
+                      style={{ color: "white" }}
+                      maxFontSizeMultiplier={1.4}
+                    >
+                      Select a Party
+                    </Text>
                   </TouchableOpacity>
                 </View>
                 {isParty && (
@@ -451,7 +370,12 @@ export default function FunQuestions() {
                       onPress={storeCurrentParty}
                       style={{ padding: 8 }}
                     >
-                      <Text style={{ color: "white" }} maxFontSizeMultiplier={1.4}>Create a New Party</Text>
+                      <Text
+                        style={{ color: "white" }}
+                        maxFontSizeMultiplier={1.4}
+                      >
+                        Create a New Party
+                      </Text>
                     </TouchableOpacity>
                   </View>
                 )}
@@ -500,7 +424,10 @@ export default function FunQuestions() {
                   Select a Party
                 </Text>
               </View>
-              <View style={styles.partySelectionColumn}>
+              <ScrollView
+                contentContainerStyle={styles.partySelectionColumn}
+                showsVerticalScrollIndicator={true}
+              >
                 {loadedParties.length < 1 && (
                   <Text style={{ color: "gray", fontSize: 16 }}>
                     No available parties
@@ -517,7 +444,7 @@ export default function FunQuestions() {
                     </View>
                   </TouchableOpacity>
                 ))}
-              </View>
+              </ScrollView>
             </View>
           )}
         </View>
@@ -626,8 +553,6 @@ const styles = StyleSheet.create({
   partyMembersContainer: {
     padding: 8,
     overflow: "scroll",
-    // borderColor: "black",
-    // borderWidth: 4,
     flexGrow: 1,
   },
   input: {
@@ -689,18 +614,3 @@ const styles = StyleSheet.create({
     color: "white",
   },
 });
-
-{
-  /* <View style={styles.arrowRow}>
-        <TouchableOpacity onPress={toggleThumbsDown} activeOpacity={1}>
-          <MaterialIcons name="thumb-down-off-alt" size={48} color="red" />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={toggleThumbsUp} activeOpacity={1}>
-          <MaterialIcons name="thumb-up-off-alt" size={48} color="green" />
-        </TouchableOpacity>
-        <Entypo name="pencil" size={48} color="white" />
-      </View> */
-}
-
-// BUG WHEN SELECTING WHILE NO PARTY ACTIVE, DUPLICATES PARTY SELECTOR ON A NEW STORAGE KEY

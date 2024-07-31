@@ -12,7 +12,6 @@ import {
   View,
 } from "react-native";
 import questions from "../personalQuestions.json";
-import { Feather } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function PersonalQuestions() {
@@ -26,7 +25,7 @@ export default function PersonalQuestions() {
   const [currentPartyIndex, setCurrentPartyIndex] = useState<number>(0);
 
   const [showExistingParties, setShowExistingParties] = useState(false);
-  // const [parties, setParties] = useState<string[][] | null>(null);
+  const [loadedParties, setLoadedParties] = useState<string[][]>([]);
 
   const shuffleArray = (array: string[]) => {
     let newArray = array.slice();
@@ -42,13 +41,10 @@ export default function PersonalQuestions() {
   const [currentQuestion, setCurrentQuestion] = useState(shuffledQuestions[0]);
 
   const nextQuestion = () => {
-    // getData("party1");
+    console.log(getData("party1"));
 
     let nextIndex = currentIndex + 1;
-    // if (nextIndex >= shuffledQuestions.length) {
-    //   setShuffledQuestions(shuffleArray(questions));
-    //   nextIndex = 0;
-    // }
+
     if (nextIndex < questions.length) {
       setCurrentIndex(nextIndex);
       setCurrentQuestion(shuffledQuestions[nextIndex]);
@@ -88,88 +84,52 @@ export default function PersonalQuestions() {
   const addPlayer = () => {
     setPlayers([...players, ""]);
   };
-
-  // const storePartyData = async (value: string[]) => {
-  //   try {
-  //     const partyCounter = await getData("partyCounter");
-  //     const counter = partyCounter ? parseInt(partyCounter) : 0;
-
-  //     const key = `party${counter + 1}`;
-
-  //     const jsonValue = JSON.stringify(value);
-  //     await AsyncStorage.setItem(key, jsonValue);
-
-  //     await AsyncStorage.setItem("partyCounter", (counter + 1).toString());
-
-  //     console.log("Party stored under key: " + key);
-  //   } catch (e) {
-  //     // save error
-  //     console.log(e);
-  //   }
-
-  //   console.log("Done.");
-  // };
+  const getData = async (key: string) => {
+    try {
+      const value = await AsyncStorage.getItem(key);
+      if (value !== null) {
+        return JSON.parse(value);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+    return null;
+  };
   const storePartyData = async (value: string[]) => {
     try {
-      await AsyncStorage.setItem("party", JSON.stringify(value));
-
+      await AsyncStorage.setItem("currentParty", JSON.stringify(value));
     } catch (error) {
       console.log(error);
     }
   };
-  const getParty = async () => {
+  const getCurrentParty = async () => {
     try {
-      const value = await AsyncStorage.getItem("party");
+      const value = await AsyncStorage.getItem("currentParty");
       if (value !== null) {
-        // console.log("VALUE IS " + value);
         const arrayValue = JSON.parse(value);
         setParty(arrayValue);
       }
     } catch (e) {
-      // error reading value
       console.log(e);
     }
   };
   const removeParty = async () => {
     try {
-      await AsyncStorage.removeItem("party");
+      await AsyncStorage.clear();
+      await AsyncStorage.removeItem("currentParty");
       setParty([]);
       setIsParty(false);
     } catch (e) {
-      // remove error
       console.log(e);
     }
-
     console.log("Item removed.");
   };
-
-  // const getParties = async () => {
-  //   try {
-  //     const partyCount = await getData("partyCounter");
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-
-  // const getParty = async (key: string) => {
-  //   try {
-  //     const value = await AsyncStorage.getItem(key);
-  //     if (value !== null) {
-  //       const parsedValue = JSON.parse(value);
-  //       return parsedValue;
-  //     }
-  //     return null;
-  //   } catch (error) {
-  //     console.log(error);
-  //   }
-  // };
-
   const createParty = () => {
     const partyMembers = players.filter((partyMember) => partyMember !== "");
     storePartyData(partyMembers);
     setPlayers(["", ""]);
     setParty(partyMembers);
-    setShowPartyModal(false); 
+    setShowPartyModal(false);
   };
   const editParty = () => {
     const partyMembers = players.filter((partyMember) => partyMember !== "");
@@ -184,16 +144,82 @@ export default function PersonalQuestions() {
     newPlayers[index] = text;
     setPlayers(newPlayers);
   };
-  const toggleThumbsUp = () => {
-    console.log("THUMBS UP");
+  const getFirstAvailablePartyKey = async () => {
+    try {
+      let index = 0;
+      while (true) {
+        const value = await AsyncStorage.getItem(`party${index}`);
+        if (value === null) {
+          console.log("INDEX FOUND: " + index);
+          return index;
+        }
+        index++;
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
-  const toggleThumbsDown = () => {
-    console.log("THUMBS DOWN");
+  const storeCurrentParty = async () => {
+    try {
+      const storageKey = await getFirstAvailablePartyKey();
+      console.log(
+        "key: " + "party" + storageKey + ", value: " + JSON.stringify(party)
+      );
+      await AsyncStorage.setItem(`party${storageKey}`, JSON.stringify(party));
+      setPlayers(["", ""]);
+      setParty([]);
+      setIsParty(false);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const loadPartySelection = async () => {
+    try {
+      let partiesLoaded: string[][] = [];
+      let index = 0;
+      while (true) {
+        const value = await AsyncStorage.getItem(`party${index}`);
+        console.log("Value " + index + ": " + value);
+        if (value === null) {
+          setLoadedParties(partiesLoaded);
+          break;
+        }
+        partiesLoaded[index] = JSON.parse(value);
+        index++;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const loadSelectedParty = async (idx: number, loadedParty: string[]) => {
+    try {
+      await AsyncStorage.setItem("currentParty", JSON.stringify(loadedParty));
+      if (isParty) {
+        await AsyncStorage.setItem(`party${idx}`, JSON.stringify(party));
+      } else {
+        await AsyncStorage.removeItem(`party${idx}`);
+        idx = idx + 1;
+        while (true) {
+          const storedValue = await AsyncStorage.getItem(`party${idx}`);
+          if (storedValue === null) {
+            break;
+          }
+          await AsyncStorage.removeItem(`party${idx}`);
+          await AsyncStorage.setItem(`party${idx - 1}`, storedValue);
+          idx++;
+        }
+      }
+      setParty(loadedParty);
+      setShowExistingParties(false);
+      setShowPartyModal(false);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {
-    getParty();
-  }, [])
+    getCurrentParty();
+  }, []);
   useEffect(() => {
     if (party.length > 0) {
       setIsParty(true);
@@ -201,6 +227,11 @@ export default function PersonalQuestions() {
       setIsParty(false);
     }
   }, [party]);
+  useEffect(() => {
+    if (showPartyModal) {
+      loadPartySelection();
+    }
+  }, [showPartyModal]);
 
   return (
     <View style={styles.container}>
@@ -212,11 +243,6 @@ export default function PersonalQuestions() {
             }
             activeOpacity={1}
           >
-            {/* <Feather
-              name="chevron-left"
-              size={48}
-              color={currentPartyIndex < 1 ? "gray" : "white"}
-            /> */}
             <Text
               style={{
                 color: currentPartyIndex < 1 ? "gray" : "white",
@@ -246,11 +272,6 @@ export default function PersonalQuestions() {
             }
             activeOpacity={1}
           >
-            {/* <Feather
-              name="chevron-right"
-              size={48}
-              color={currentPartyIndex >= party.length - 1 ? "gray" : "white"}
-            /> */}
             <Text
               style={{
                 color: currentPartyIndex >= party.length - 1 ? "gray" : "white",
@@ -281,11 +302,6 @@ export default function PersonalQuestions() {
       <StatusBar style="auto" />
       <View style={styles.arrowRow}>
         <TouchableOpacity onPress={previousQuestion} activeOpacity={1}>
-          {/* <Feather
-            name="chevron-left"
-            size={48}
-            color={currentIndex < 1 ? "gray" : "white"}
-          /> */}
           <Text
             style={{ color: currentIndex < 1 ? "gray" : "white", fontSize: 64 }}
             maxFontSizeMultiplier={1.1}
@@ -297,11 +313,6 @@ export default function PersonalQuestions() {
           {currentIndex + 1 + "/" + questions.length}
         </Text>
         <TouchableOpacity onPress={nextQuestion} activeOpacity={1}>
-          {/* <Feather
-            name="chevron-right"
-            size={48}
-            color={currentIndex >= questions.length - 1 ? "gray" : "white"}
-          /> */}
           <Text
             style={{
               color: currentIndex >= questions.length - 1 ? "gray" : "white",
@@ -325,6 +336,7 @@ export default function PersonalQuestions() {
           style={styles.closeButton}
           onPress={() => {
             setShowPartyModal(false);
+            setShowExistingParties(false);
             setPlayers(["", ""]);
           }}
         >
@@ -334,25 +346,40 @@ export default function PersonalQuestions() {
         </TouchableOpacity>
 
         <View style={styles.modalContainer}>
-          {/* <View style={styles.existingPartyButton}>
-            <TouchableOpacity
-              onPress={() => setShowExistingParties(!showExistingParties)}
-              activeOpacity={1}
-              style={{ padding: 6 }}
-            >
-              <Text
-                style={styles.existingPartyButtonText}
-                maxFontSizeMultiplier={1.2}
-              >
-                {!showExistingParties
-                  ? "Join an Existing Party"
-                  : "Create a New Party"}
-              </Text>
-            </TouchableOpacity>
-          </View> */}
-
           {!showExistingParties ? (
             <View style={styles.formContainer}>
+              <View style={styles.formTitleRow}>
+                <View style={styles.partySelectMenuButton}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setShowExistingParties(true);
+                    }}
+                    style={{ padding: 8 }}
+                  >
+                    <Text
+                      style={{ color: "white" }}
+                      maxFontSizeMultiplier={1.4}
+                    >
+                      Select a Party
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                {isParty && (
+                  <View style={styles.partySelectMenuButton}>
+                    <TouchableOpacity
+                      onPress={storeCurrentParty}
+                      style={{ padding: 8 }}
+                    >
+                      <Text
+                        style={{ color: "white" }}
+                        maxFontSizeMultiplier={1.4}
+                      >
+                        Create a New Party
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                )}
+              </View>
               <View style={styles.formTitleRow}>
                 <Text style={styles.formTitle} maxFontSizeMultiplier={1.1}>
                   {isParty ? "Edit Party" : "Create a Party"}
@@ -385,20 +412,39 @@ export default function PersonalQuestions() {
             </View>
           ) : (
             <View style={styles.formContainer}>
+              <View style={styles.partySelectMenuButton}>
+                <Button
+                  title="Create/Edit Party"
+                  onPress={() => setShowExistingParties(false)}
+                  color="white"
+                />
+              </View>
               <View style={styles.formTitleRow}>
                 <Text style={styles.formTitle} maxFontSizeMultiplier={1.1}>
                   Select a Party
                 </Text>
               </View>
-              {/* {players.map((player, index) => (
-                <TextInput
-                  key={index}
-                  style={styles.input}
-                  value={player}
-                  placeholder={"Player " + (index + 1)}
-                  onChangeText={(text) => handlePlayerChange(text, index)}
-                />
-              ))} */}
+              <ScrollView
+                contentContainerStyle={styles.partySelectionColumn}
+                showsVerticalScrollIndicator={true}
+              >
+                {loadedParties.length < 1 && (
+                  <Text style={{ color: "gray", fontSize: 16 }}>
+                    No available parties
+                  </Text>
+                )}
+                {loadedParties.map((loadedParty, idx) => (
+                  <TouchableOpacity
+                    key={idx}
+                    style={styles.partySelectButton}
+                    onPress={() => loadSelectedParty(idx, loadedParty)}
+                  >
+                    <View style={styles.partySelectButtonContainer}>
+                      <Text numberOfLines={1}>{loadedParty.join(", ")}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
             </View>
           )}
         </View>
@@ -435,10 +481,42 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     gap: 32,
   },
+  selectPartyRow: {
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center",
+  },
+  partySelectMenuButton: {
+    backgroundColor: "#007AFF",
+  },
+  partySelectionColumn: {
+    flex: 1,
+    flexDirection: "column",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    width: "100%",
+    gap: 24,
+  },
+  partySelectButton: {
+    backgroundColor: "white",
+    padding: 16,
+    width: "100%",
+    flexDirection: "row",
+    gap: 8,
+    borderRadius: 8,
+  },
+  partySelectButtonContainer: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
   formTitleRow: {
+    marginTop: 8,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
+    marginBottom: 8,
   },
   modalContainer: {
     paddingTop: 120,
@@ -465,7 +543,7 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "#25292e",
     flex: 1,
-    gap: 32,
+    gap: 0,
   },
   formTitle: {
     fontSize: 20,
@@ -475,8 +553,6 @@ const styles = StyleSheet.create({
   partyMembersContainer: {
     padding: 8,
     overflow: "scroll",
-    // borderColor: "black",
-    // borderWidth: 4,
     flexGrow: 1,
   },
   input: {
@@ -538,16 +614,3 @@ const styles = StyleSheet.create({
     color: "white",
   },
 });
-
-{
-  /* <View style={styles.arrowRow}>
-        <TouchableOpacity onPress={toggleThumbsDown} activeOpacity={1}>
-          <MaterialIcons name="thumb-down-off-alt" size={48} color="red" />
-        </TouchableOpacity>
-
-        <TouchableOpacity onPress={toggleThumbsUp} activeOpacity={1}>
-          <MaterialIcons name="thumb-up-off-alt" size={48} color="green" />
-        </TouchableOpacity>
-        <Entypo name="pencil" size={48} color="white" />
-      </View> */
-}
