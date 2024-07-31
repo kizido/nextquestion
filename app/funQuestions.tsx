@@ -169,6 +169,7 @@ export default function FunQuestions() {
       setPlayers(["", ""]);
       setParty([]);
       setIsParty(false);
+      loadPartySelection();
     } catch (error) {
       console.log(error);
     }
