@@ -13,6 +13,8 @@ import {
 } from "react-native";
 import questions from "../funQuestions.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import db from "../firebaseConfig";
+import { collection, getDocs } from "firebase/firestore/lite";
 
 export default function FunQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -218,8 +220,16 @@ export default function FunQuestions() {
     }
   };
 
+  const getDbQuestions = async () => {
+    const dbQuestions = collection(db, "questions");
+    const dbQuestionsSnapshot = await getDocs(dbQuestions);
+    const dbQuestionsList = dbQuestionsSnapshot.docs.map((doc) => doc.data());
+    console.log(dbQuestionsList);
+  };
   useEffect(() => {
     getCurrentParty();
+
+    getDbQuestions();
   }, []);
   useEffect(() => {
     if (party.length > 0) {
