@@ -246,7 +246,30 @@ export default function FunQuestions() {
 
   return (
     <View style={styles.container}>
-      {isParty ? (
+      <View
+        style={{
+          width: "100%",
+          flexDirection: "row",
+          justifyContent: "flex-end",
+        }}
+      >
+        <TouchableOpacity>
+          <Text
+            style={{
+              backgroundColor: "orange",
+              width: 48,
+              height: 48,
+              fontSize: 32,
+              textAlign: "center",
+              textAlignVertical: "center",
+              lineHeight: 48,
+            }}
+          >
+            ?
+          </Text>
+        </TouchableOpacity>
+      </View>
+      {/* {isParty ? (
         <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
           <TouchableOpacity
             onPress={() =>
@@ -304,9 +327,9 @@ export default function FunQuestions() {
             Create a Party
           </Text>
         </TouchableOpacity>
-      )}
+      )} */}
       <View style={styles.questionContainer}>
-        <Text style={styles.questionText} maxFontSizeMultiplier={1.2}>
+        <Text style={styles.questionText} maxFontSizeMultiplier={1}>
           {currentQuestion}
         </Text>
       </View>
@@ -351,7 +374,7 @@ export default function FunQuestions() {
             setPlayers(["", ""]);
           }}
         >
-          <Text style={styles.closeButtonText} maxFontSizeMultiplier={1.1}>
+          <Text style={styles.closeButtonText} maxFontSizeMultiplier={1}>
             X
           </Text>
         </TouchableOpacity>
@@ -392,11 +415,13 @@ export default function FunQuestions() {
                 )}
               </View>
               <View style={styles.formTitleRow}>
-                <Text style={styles.formTitle} maxFontSizeMultiplier={1.1}>
+                <Text style={styles.formTitle} maxFontSizeMultiplier={1}>
                   {isParty ? "Edit Party" : "Create a Party"}
                 </Text>
                 <Pressable onPress={addPlayer}>
-                  <Text style={styles.addPlayer}>Add a Player</Text>
+                  <Text style={styles.addPlayer} maxFontSizeMultiplier={1}>
+                    Add a Player
+                  </Text>
                 </Pressable>
               </View>
               <ScrollView
@@ -479,7 +504,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
-    paddingHorizontal: 50,
+    paddingHorizontal: 10,
   },
   questionText: {
     color: "white",
