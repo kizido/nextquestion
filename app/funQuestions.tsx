@@ -2,6 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import {
   Button,
+  Keyboard,
   Modal,
   Pressable,
   ScrollView,
@@ -14,7 +15,7 @@ import {
 import questions from "../funQuestions.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import db from "../firebaseConfig";
-import { collection, getDocs } from "firebase/firestore/lite";
+import { collection, getDocs, addDoc } from "firebase/firestore/lite";
 
 export default function FunQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -28,6 +29,12 @@ export default function FunQuestions() {
 
   const [showExistingParties, setShowExistingParties] = useState(false);
   const [loadedParties, setLoadedParties] = useState<string[][]>([]);
+
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [isSubmitQuestionOpen, setIsSubmitQuestionOpen] = useState(false);
+  const [isRequestFeatureOpen, setIsRequestFeatureOpen] = useState(false);
+  const [isSubmitBugOpen, setIsSubmitBugOpen] = useState(false);
+  const [feedbackValue, setFeedbackValue] = useState<string>("");
 
   const shuffleArray = (array: string[]) => {
     let newArray = array.slice();
@@ -226,6 +233,10 @@ export default function FunQuestions() {
     const dbQuestionsList = dbQuestionsSnapshot.docs.map((doc) => doc.data());
     console.log(dbQuestionsList);
   };
+  const writeQuestionSubmissionToDatabase = async () => {
+    const dbQuestionSubmissions = collection(db, "questionSubmissions");
+    addDoc(dbQuestionSubmissions, { question: feedbackValue });
+  };
   useEffect(() => {
     getCurrentParty();
 
@@ -253,7 +264,7 @@ export default function FunQuestions() {
           justifyContent: "flex-end",
         }}
       >
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => setIsFeedbackModalOpen(true)}>
           <Text
             style={{
               backgroundColor: "orange",
@@ -262,13 +273,169 @@ export default function FunQuestions() {
               fontSize: 32,
               textAlign: "center",
               textAlignVertical: "center",
-              lineHeight: 48,
+              fontWeight: "bold",
             }}
           >
             ?
           </Text>
         </TouchableOpacity>
       </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isFeedbackModalOpen}
+        onRequestClose={() => setIsFeedbackModalOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => {
+            setIsFeedbackModalOpen(false);
+            setIsSubmitQuestionOpen(false);
+            setIsRequestFeatureOpen(false);
+            setIsSubmitBugOpen(false);
+          }}
+        >
+          <Text style={styles.closeButtonText} maxFontSizeMultiplier={1}>
+            X
+          </Text>
+        </TouchableOpacity>
+
+        {!isSubmitQuestionOpen && !isRequestFeatureOpen && !isSubmitBugOpen && (
+          <View style={styles.feedbackModalContainer}>
+            <TouchableOpacity
+              style={styles.feedbackModalButton}
+              onPress={() => setIsSubmitQuestionOpen(true)}
+            >
+              <Text style={styles.feedbackModalText}>
+                Submit a New Question
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.feedbackModalButton}
+              onPress={() => setIsRequestFeatureOpen(true)}
+            >
+              <Text style={styles.feedbackModalText}>Request a Feature</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.feedbackModalButton}
+              onPress={() => setIsSubmitBugOpen(true)}
+            >
+              <Text style={styles.feedbackModalText}>Report a Bug</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {isSubmitQuestionOpen && (
+          <View style={styles.feedbackSubmissionFormContainer}>
+            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }}>
+              Enter a Question Submission
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: "white",
+                width: "100%",
+                height: 128,
+                padding: 16,
+                fontSize: 16,
+              }}
+              multiline={true}
+              numberOfLines={4}
+              onSubmitEditing={Keyboard.dismiss}
+              blurOnSubmit={true}
+              value={feedbackValue}
+              onChangeText={(text) => setFeedbackValue(text)}
+            />
+            <TouchableOpacity
+              style={{ backgroundColor: "lightgray", width: "100%" }}
+              onPress={() => {
+                writeQuestionSubmissionToDatabase();
+                setIsSubmitQuestionOpen(false);
+                setIsFeedbackModalOpen(false);
+              }}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  padding: 8,
+                  fontSize: 16,
+                  fontWeight: 500,
+                }}
+              >
+                Submit
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {isRequestFeatureOpen && (
+          <View style={styles.feedbackSubmissionFormContainer}>
+            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }}>
+              Enter a Feature Request
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: "white",
+                width: "100%",
+                height: 128,
+                padding: 16,
+                fontSize: 16,
+              }}
+              multiline={true}
+              numberOfLines={4}
+              onSubmitEditing={Keyboard.dismiss}
+              blurOnSubmit={true}
+            />
+            <TouchableOpacity
+              style={{ backgroundColor: "lightgray", width: "100%" }}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  padding: 8,
+                  fontSize: 16,
+                  fontWeight: 500,
+                }}
+              >
+                Submit
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {isSubmitBugOpen && (
+          <View style={styles.feedbackSubmissionFormContainer}>
+            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }}>
+              Report a Bug
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: "white",
+                width: "100%",
+                height: 128,
+                padding: 16,
+                fontSize: 16,
+              }}
+              multiline={true}
+              numberOfLines={4}
+              onSubmitEditing={Keyboard.dismiss}
+              blurOnSubmit={true}
+            />
+            <TouchableOpacity
+              style={{ backgroundColor: "lightgray", width: "100%" }}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  padding: 8,
+                  fontSize: 16,
+                  fontWeight: 500,
+                }}
+              >
+                Submit
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </Modal>
+
       {/* {isParty ? (
         <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
           <TouchableOpacity
@@ -562,6 +729,31 @@ const styles = StyleSheet.create({
     backgroundColor: "#25292e",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  feedbackSubmissionFormContainer: {
+    paddingHorizontal: 64,
+    flex: 1,
+    backgroundColor: "#25292e",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 24,
+  },
+  feedbackModalContainer: {
+    paddingHorizontal: 32,
+    flex: 1,
+    backgroundColor: "#25292e",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 48,
+  },
+  feedbackModalButton: {
+    backgroundColor: "white",
+    width: "80%",
+    paddingVertical: 16,
+  },
+  feedbackModalText: {
+    textAlign: "center",
+    fontSize: 20,
   },
   closeButton: {
     position: "absolute",
