@@ -2,6 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useState } from "react";
 import {
   Button,
+  Keyboard,
   Modal,
   Pressable,
   ScrollView,
@@ -11,8 +12,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import questions from "../fantasyQuestions.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import db from "../firebaseConfig";
+import { collection, getDocs, addDoc } from "firebase/firestore/lite";
+import questions from "../fantasyQuestions.json";
 
 export default function FantasyQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -26,6 +29,12 @@ export default function FantasyQuestions() {
 
   const [showExistingParties, setShowExistingParties] = useState(false);
   const [loadedParties, setLoadedParties] = useState<string[][]>([]);
+
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [isSubmitQuestionOpen, setIsSubmitQuestionOpen] = useState(false);
+  const [isRequestFeatureOpen, setIsRequestFeatureOpen] = useState(false);
+  const [isSubmitBugOpen, setIsSubmitBugOpen] = useState(false);
+  const [feedbackValue, setFeedbackValue] = useState<string>("");
 
   const shuffleArray = (array: string[]) => {
     let newArray = array.slice();
@@ -169,6 +178,7 @@ export default function FantasyQuestions() {
       setPlayers(["", ""]);
       setParty([]);
       setIsParty(false);
+      loadPartySelection();
     } catch (error) {
       console.log(error);
     }
@@ -217,8 +227,30 @@ export default function FantasyQuestions() {
     }
   };
 
+  const getDbQuestions = async () => {
+    const dbQuestions = collection(db, "questions");
+    const dbQuestionsSnapshot = await getDocs(dbQuestions);
+    const dbQuestionsList = dbQuestionsSnapshot.docs.map((doc) => doc.data());
+    console.log(dbQuestionsList);
+  };
+  const writeQuestionSubmissionToDatabase = async () => {
+    const dbQuestionSubmissions = collection(db, "questionSubmissions");
+    addDoc(dbQuestionSubmissions, { question: feedbackValue });
+    setFeedbackValue("");
+  };
+  const writeFeatureRequestToDatabase = async () => {
+    const dbFeatureRequests = collection(db, "featureRequests");
+    addDoc(dbFeatureRequests, { feature: feedbackValue });
+    setFeedbackValue("");
+  };
+  const writeBugReportToDatabase = async () => {
+    const dbBugReports = collection(db, "bugReports");
+    addDoc(dbBugReports, { bug: feedbackValue });
+    setFeedbackValue("");
+  };
   useEffect(() => {
     getCurrentParty();
+    getDbQuestions();
   }, []);
   useEffect(() => {
     if (party.length > 0) {
@@ -235,7 +267,196 @@ export default function FantasyQuestions() {
 
   return (
     <View style={styles.container}>
-      {isParty ? (
+      <View
+        style={{
+          width: "100%",
+          flexDirection: "row",
+          justifyContent: "flex-end",
+        }}
+      >
+        <TouchableOpacity style={{justifyContent: "center", alignItems: "center", width: 48, height: 48, backgroundColor: "orange",}} onPress={() => setIsFeedbackModalOpen(true)}>
+          <Text maxFontSizeMultiplier={1.3}
+            style={{
+              fontSize: 32,
+              fontWeight: "bold",
+            }}
+          >
+            ?
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isFeedbackModalOpen}
+        onRequestClose={() => setIsFeedbackModalOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.closeButton}
+          onPress={() => {
+            setIsFeedbackModalOpen(false);
+            setIsSubmitQuestionOpen(false);
+            setIsRequestFeatureOpen(false);
+            setIsSubmitBugOpen(false);
+            setFeedbackValue("");
+          }}
+        >
+          <Text style={styles.closeButtonText} maxFontSizeMultiplier={1}>
+            X
+          </Text>
+        </TouchableOpacity>
+
+        {!isSubmitQuestionOpen && !isRequestFeatureOpen && !isSubmitBugOpen && (
+          <View style={styles.feedbackModalContainer}>
+            <TouchableOpacity
+              style={styles.feedbackModalButton}
+              onPress={() => setIsSubmitQuestionOpen(true)}
+            >
+              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>
+                Submit a New Question
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.feedbackModalButton}
+              onPress={() => setIsRequestFeatureOpen(true)}
+            >
+              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>Request a Feature</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.feedbackModalButton}
+              onPress={() => setIsSubmitBugOpen(true)}
+            >
+              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>Report a Bug</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {isSubmitQuestionOpen && (
+          <View style={styles.feedbackSubmissionFormContainer}>
+            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
+              Enter a Question Submission
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: "white",
+                width: "100%",
+                height: 128,
+                padding: 16,
+                fontSize: 16,
+              }}
+              multiline={true}
+              numberOfLines={4}
+              onSubmitEditing={Keyboard.dismiss}
+              blurOnSubmit={true}
+              value={feedbackValue}
+              onChangeText={(text) => setFeedbackValue(text)}
+            />
+            <TouchableOpacity
+              style={{ backgroundColor: "lightgray", width: "100%" }}
+              onPress={() => {
+                writeQuestionSubmissionToDatabase();
+                setIsSubmitQuestionOpen(false);
+                setIsFeedbackModalOpen(false);
+              }}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  padding: 8,
+                  fontSize: 16,
+                  fontWeight: 500,
+                }}
+              >
+                Submit
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {isRequestFeatureOpen && (
+          <View style={styles.feedbackSubmissionFormContainer}>
+            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
+              Enter a Feature Request
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: "white",
+                width: "100%",
+                height: 128,
+                padding: 16,
+                fontSize: 16,
+              }}
+              multiline={true}
+              numberOfLines={4}
+              onSubmitEditing={Keyboard.dismiss}
+              blurOnSubmit={true}
+              value={feedbackValue}
+              onChangeText={(text) => setFeedbackValue(text)}
+            />
+            <TouchableOpacity
+              style={{ backgroundColor: "lightgray", width: "100%" }}
+              onPress={() => {
+                writeFeatureRequestToDatabase();
+                setIsRequestFeatureOpen(false);
+                setIsFeedbackModalOpen(false);
+              }}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  padding: 8,
+                  fontSize: 16,
+                  fontWeight: 500,
+                }}
+              >
+                Submit
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {isSubmitBugOpen && (
+          <View style={styles.feedbackSubmissionFormContainer}>
+            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
+              Report a Bug
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: "white",
+                width: "100%",
+                height: 128,
+                padding: 16,
+                fontSize: 16,
+              }}
+              multiline={true}
+              numberOfLines={4}
+              onSubmitEditing={Keyboard.dismiss}
+              blurOnSubmit={true}
+              value={feedbackValue}
+              onChangeText={(text) => setFeedbackValue(text)}
+            />
+            <TouchableOpacity
+              style={{ backgroundColor: "lightgray", width: "100%" }}
+              onPress={() => {
+                writeBugReportToDatabase();
+                setIsSubmitBugOpen(false);
+                setIsFeedbackModalOpen(false);
+              }}
+            >
+              <Text
+                style={{
+                  textAlign: "center",
+                  padding: 8,
+                  fontSize: 16,
+                  fontWeight: 500,
+                }}
+              >
+                Submit
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </Modal>
+
+      {/* {isParty ? (
         <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
           <TouchableOpacity
             onPress={() =>
@@ -293,9 +514,9 @@ export default function FantasyQuestions() {
             Create a Party
           </Text>
         </TouchableOpacity>
-      )}
+      )} */}
       <View style={styles.questionContainer}>
-        <Text style={styles.questionText} maxFontSizeMultiplier={1.2}>
+        <Text style={styles.questionText} maxFontSizeMultiplier={1}>
           {currentQuestion}
         </Text>
       </View>
@@ -340,7 +561,7 @@ export default function FantasyQuestions() {
             setPlayers(["", ""]);
           }}
         >
-          <Text style={styles.closeButtonText} maxFontSizeMultiplier={1.1}>
+          <Text style={styles.closeButtonText} maxFontSizeMultiplier={1}>
             X
           </Text>
         </TouchableOpacity>
@@ -381,11 +602,13 @@ export default function FantasyQuestions() {
                 )}
               </View>
               <View style={styles.formTitleRow}>
-                <Text style={styles.formTitle} maxFontSizeMultiplier={1.1}>
+                <Text style={styles.formTitle} maxFontSizeMultiplier={1}>
                   {isParty ? "Edit Party" : "Create a Party"}
                 </Text>
                 <Pressable onPress={addPlayer}>
-                  <Text style={styles.addPlayer}>Add a Player</Text>
+                  <Text style={styles.addPlayer} maxFontSizeMultiplier={1}>
+                    Add a Player
+                  </Text>
                 </Pressable>
               </View>
               <ScrollView
@@ -468,7 +691,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
-    paddingHorizontal: 50,
+    paddingHorizontal: 10,
   },
   questionText: {
     color: "white",
@@ -526,6 +749,31 @@ const styles = StyleSheet.create({
     backgroundColor: "#25292e",
     justifyContent: "space-between",
     alignItems: "center",
+  },
+  feedbackSubmissionFormContainer: {
+    paddingHorizontal: 64,
+    flex: 1,
+    backgroundColor: "#25292e",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 24,
+  },
+  feedbackModalContainer: {
+    paddingHorizontal: 32,
+    flex: 1,
+    backgroundColor: "#25292e",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 48,
+  },
+  feedbackModalButton: {
+    backgroundColor: "white",
+    width: "80%",
+    paddingVertical: 16,
+  },
+  feedbackModalText: {
+    textAlign: "center",
+    fontSize: 20,
   },
   closeButton: {
     position: "absolute",

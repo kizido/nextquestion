@@ -12,10 +12,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import questions from "../funQuestions.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import db from "../firebaseConfig";
 import { collection, getDocs, addDoc } from "firebase/firestore/lite";
+import questions from "../funQuestions.json";
 
 export default function FunQuestions() {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -236,10 +236,20 @@ export default function FunQuestions() {
   const writeQuestionSubmissionToDatabase = async () => {
     const dbQuestionSubmissions = collection(db, "questionSubmissions");
     addDoc(dbQuestionSubmissions, { question: feedbackValue });
+    setFeedbackValue("");
+  };
+  const writeFeatureRequestToDatabase = async () => {
+    const dbFeatureRequests = collection(db, "featureRequests");
+    addDoc(dbFeatureRequests, { feature: feedbackValue });
+    setFeedbackValue("");
+  };
+  const writeBugReportToDatabase = async () => {
+    const dbBugReports = collection(db, "bugReports");
+    addDoc(dbBugReports, { bug: feedbackValue });
+    setFeedbackValue("");
   };
   useEffect(() => {
     getCurrentParty();
-
     getDbQuestions();
   }, []);
   useEffect(() => {
@@ -264,15 +274,10 @@ export default function FunQuestions() {
           justifyContent: "flex-end",
         }}
       >
-        <TouchableOpacity onPress={() => setIsFeedbackModalOpen(true)}>
-          <Text
+        <TouchableOpacity style={{justifyContent: "center", alignItems: "center", width: 48, height: 48, backgroundColor: "orange",}} onPress={() => setIsFeedbackModalOpen(true)}>
+          <Text maxFontSizeMultiplier={1.3}
             style={{
-              backgroundColor: "orange",
-              width: 48,
-              height: 48,
               fontSize: 32,
-              textAlign: "center",
-              textAlignVertical: "center",
               fontWeight: "bold",
             }}
           >
@@ -294,6 +299,7 @@ export default function FunQuestions() {
             setIsSubmitQuestionOpen(false);
             setIsRequestFeatureOpen(false);
             setIsSubmitBugOpen(false);
+            setFeedbackValue("");
           }}
         >
           <Text style={styles.closeButtonText} maxFontSizeMultiplier={1}>
@@ -307,7 +313,7 @@ export default function FunQuestions() {
               style={styles.feedbackModalButton}
               onPress={() => setIsSubmitQuestionOpen(true)}
             >
-              <Text style={styles.feedbackModalText}>
+              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>
                 Submit a New Question
               </Text>
             </TouchableOpacity>
@@ -315,19 +321,19 @@ export default function FunQuestions() {
               style={styles.feedbackModalButton}
               onPress={() => setIsRequestFeatureOpen(true)}
             >
-              <Text style={styles.feedbackModalText}>Request a Feature</Text>
+              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>Request a Feature</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.feedbackModalButton}
               onPress={() => setIsSubmitBugOpen(true)}
             >
-              <Text style={styles.feedbackModalText}>Report a Bug</Text>
+              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>Report a Bug</Text>
             </TouchableOpacity>
           </View>
         )}
         {isSubmitQuestionOpen && (
           <View style={styles.feedbackSubmissionFormContainer}>
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }}>
+            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
               Enter a Question Submission
             </Text>
             <TextInput
@@ -368,7 +374,7 @@ export default function FunQuestions() {
         )}
         {isRequestFeatureOpen && (
           <View style={styles.feedbackSubmissionFormContainer}>
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }}>
+            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
               Enter a Feature Request
             </Text>
             <TextInput
@@ -383,9 +389,16 @@ export default function FunQuestions() {
               numberOfLines={4}
               onSubmitEditing={Keyboard.dismiss}
               blurOnSubmit={true}
+              value={feedbackValue}
+              onChangeText={(text) => setFeedbackValue(text)}
             />
             <TouchableOpacity
               style={{ backgroundColor: "lightgray", width: "100%" }}
+              onPress={() => {
+                writeFeatureRequestToDatabase();
+                setIsRequestFeatureOpen(false);
+                setIsFeedbackModalOpen(false);
+              }}
             >
               <Text
                 style={{
@@ -402,7 +415,7 @@ export default function FunQuestions() {
         )}
         {isSubmitBugOpen && (
           <View style={styles.feedbackSubmissionFormContainer}>
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }}>
+            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
               Report a Bug
             </Text>
             <TextInput
@@ -417,9 +430,16 @@ export default function FunQuestions() {
               numberOfLines={4}
               onSubmitEditing={Keyboard.dismiss}
               blurOnSubmit={true}
+              value={feedbackValue}
+              onChangeText={(text) => setFeedbackValue(text)}
             />
             <TouchableOpacity
               style={{ backgroundColor: "lightgray", width: "100%" }}
+              onPress={() => {
+                writeBugReportToDatabase();
+                setIsSubmitBugOpen(false);
+                setIsFeedbackModalOpen(false);
+              }}
             >
               <Text
                 style={{
