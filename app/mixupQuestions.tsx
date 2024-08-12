@@ -18,8 +18,8 @@ import personalQuestions from "../personalQuestions.json";
 import fantasyQuestions from "../fantasyQuestions.json";
 import futureQuestions from "../futureQuestions.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import db from "../firebaseConfig";
-import { collection, getDocs, addDoc } from "firebase/firestore/lite";
+import app from "../firebaseConfig";
+import { collection, getDocs, addDoc, getFirestore } from "firebase/firestore/lite";
 
 const questions = [
   ...funQuestions,
@@ -30,6 +30,7 @@ const questions = [
 ];
 
 export default function MixupQuestions() {
+  const db = getFirestore(app);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showPartyModal, setShowPartyModal] = useState(false);
 

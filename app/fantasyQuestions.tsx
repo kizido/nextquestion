@@ -13,11 +13,17 @@ import {
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import db from "../firebaseConfig";
-import { collection, getDocs, addDoc } from "firebase/firestore/lite";
+import app from "../firebaseConfig";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  getFirestore,
+} from "firebase/firestore/lite";
 import questions from "../fantasyQuestions.json";
 
 export default function FantasyQuestions() {
+  const db = getFirestore(app);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showPartyModal, setShowPartyModal] = useState(false);
 
@@ -274,8 +280,18 @@ export default function FantasyQuestions() {
           justifyContent: "flex-end",
         }}
       >
-        <TouchableOpacity style={{justifyContent: "center", alignItems: "center", width: 48, height: 48, backgroundColor: "orange",}} onPress={() => setIsFeedbackModalOpen(true)}>
-          <Text maxFontSizeMultiplier={1.3}
+        <TouchableOpacity
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            width: 48,
+            height: 48,
+            backgroundColor: "orange",
+          }}
+          onPress={() => setIsFeedbackModalOpen(true)}
+        >
+          <Text
+            maxFontSizeMultiplier={1.3}
             style={{
               fontSize: 32,
               fontWeight: "bold",
@@ -313,7 +329,10 @@ export default function FantasyQuestions() {
               style={styles.feedbackModalButton}
               onPress={() => setIsSubmitQuestionOpen(true)}
             >
-              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>
+              <Text
+                style={styles.feedbackModalText}
+                maxFontSizeMultiplier={1.5}
+              >
                 Submit a New Question
               </Text>
             </TouchableOpacity>
@@ -321,19 +340,32 @@ export default function FantasyQuestions() {
               style={styles.feedbackModalButton}
               onPress={() => setIsRequestFeatureOpen(true)}
             >
-              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>Request a Feature</Text>
+              <Text
+                style={styles.feedbackModalText}
+                maxFontSizeMultiplier={1.5}
+              >
+                Request a Feature
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.feedbackModalButton}
               onPress={() => setIsSubmitBugOpen(true)}
             >
-              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>Report a Bug</Text>
+              <Text
+                style={styles.feedbackModalText}
+                maxFontSizeMultiplier={1.5}
+              >
+                Report a Bug
+              </Text>
             </TouchableOpacity>
           </View>
         )}
         {isSubmitQuestionOpen && (
           <View style={styles.feedbackSubmissionFormContainer}>
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
+            <Text
+              style={{ fontSize: 20, color: "white", textAlign: "center" }}
+              maxFontSizeMultiplier={2}
+            >
               Enter a Question Submission
             </Text>
             <TextInput
@@ -374,7 +406,10 @@ export default function FantasyQuestions() {
         )}
         {isRequestFeatureOpen && (
           <View style={styles.feedbackSubmissionFormContainer}>
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
+            <Text
+              style={{ fontSize: 20, color: "white", textAlign: "center" }}
+              maxFontSizeMultiplier={2}
+            >
               Enter a Feature Request
             </Text>
             <TextInput
@@ -415,7 +450,10 @@ export default function FantasyQuestions() {
         )}
         {isSubmitBugOpen && (
           <View style={styles.feedbackSubmissionFormContainer}>
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
+            <Text
+              style={{ fontSize: 20, color: "white", textAlign: "center" }}
+              maxFontSizeMultiplier={2}
+            >
               Report a Bug
             </Text>
             <TextInput

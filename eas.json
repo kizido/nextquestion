@@ -4,11 +4,11 @@
   },
   "build": {
     "development": {
-      "developmentClient": true,
-      "distribution": "internal"
+      "developmentClient": false,
+      "distribution": "store"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "store"
     },
     "production": {}
   },
