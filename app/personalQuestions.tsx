@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import app from "../firebaseConfig";
-import { collection, getDocs, addDoc, getFirestore } from "firebase/firestore/lite";
+import { collection, getDocs, addDoc, getFirestore } from "firebase/firestore";
 import questions from "../personalQuestions.json";
 
 export default function PersonalQuestions() {

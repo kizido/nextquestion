@@ -19,7 +19,7 @@ import {
   getDocs,
   addDoc,
   getFirestore,
-} from "firebase/firestore/lite";
+} from "firebase/firestore";
 import questions from "../fantasyQuestions.json";
 
 export default function FantasyQuestions() {

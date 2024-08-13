@@ -19,7 +19,7 @@ import fantasyQuestions from "../fantasyQuestions.json";
 import futureQuestions from "../futureQuestions.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import app from "../firebaseConfig";
-import { collection, getDocs, addDoc, getFirestore } from "firebase/firestore/lite";
+import { collection, getDocs, addDoc, getFirestore } from "firebase/firestore";
 
 const questions = [
   ...funQuestions,

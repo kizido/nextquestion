@@ -15,9 +15,8 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 // import db from "../firebaseConfig";
 import app from "../firebaseConfig";
-import { collection, getDocs, addDoc } from "firebase/firestore/lite";
+import { collection, getDocs, addDoc, getFirestore } from "firebase/firestore";
 import questions from "../funQuestions.json";
-import { getFirestore } from "firebase/firestore/lite";
 
 export default function FunQuestions() {
   const db = getFirestore(app);
