@@ -56,8 +56,6 @@ export default function FantasyQuestions() {
   const [currentQuestion, setCurrentQuestion] = useState(shuffledQuestions[0]);
 
   const nextQuestion = () => {
-    console.log(getData("party1"));
-
     let nextIndex = currentIndex + 1;
 
     if (nextIndex < questions.length) {
@@ -234,10 +232,10 @@ export default function FantasyQuestions() {
   };
 
   const getDbQuestions = async () => {
-    const dbQuestions = collection(db, "questions");
-    const dbQuestionsSnapshot = await getDocs(dbQuestions);
-    const dbQuestionsList = dbQuestionsSnapshot.docs.map((doc) => doc.data());
-    console.log(dbQuestionsList);
+    // const dbQuestions = collection(db, "questions");
+    // const dbQuestionsSnapshot = await getDocs(dbQuestions);
+    // const dbQuestionsList = dbQuestionsSnapshot.docs.map((doc) => doc.data());
+    // console.log(dbQuestionsList);
   };
   const writeQuestionSubmissionToDatabase = async () => {
     const dbQuestionSubmissions = collection(db, "questionSubmissions");
