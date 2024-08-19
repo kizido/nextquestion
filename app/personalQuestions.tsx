@@ -331,7 +331,7 @@ export default function PersonalQuestions() {
           </View>
         )}
         {isSubmitQuestionOpen && (
-          <View style={styles.feedbackSubmissionFormContainer}>
+          <ScrollView contentContainerStyle={styles.feedbackSubmissionFormContainer} keyboardShouldPersistTaps="handled">
             <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
               Enter a Question Submission
             </Text>
@@ -369,10 +369,10 @@ export default function PersonalQuestions() {
                 Submit
               </Text>
             </TouchableOpacity>
-          </View>
+          </ScrollView>
         )}
         {isRequestFeatureOpen && (
-          <View style={styles.feedbackSubmissionFormContainer}>
+          <ScrollView contentContainerStyle={styles.feedbackSubmissionFormContainer} keyboardShouldPersistTaps="handled">
             <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
               Enter a Feature Request
             </Text>
@@ -410,10 +410,10 @@ export default function PersonalQuestions() {
                 Submit
               </Text>
             </TouchableOpacity>
-          </View>
+          </ScrollView>
         )}
         {isSubmitBugOpen && (
-          <View style={styles.feedbackSubmissionFormContainer}>
+          <ScrollView contentContainerStyle={styles.feedbackSubmissionFormContainer} keyboardShouldPersistTaps="handled">
             <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
               Report a Bug
             </Text>
@@ -451,7 +451,7 @@ export default function PersonalQuestions() {
                 Submit
               </Text>
             </TouchableOpacity>
-          </View>
+          </ScrollView>
         )}
       </Modal>
 
@@ -751,9 +751,10 @@ const styles = StyleSheet.create({
   },
   feedbackSubmissionFormContainer: {
     paddingHorizontal: 64,
+    paddingVertical: 128,
     flex: 1,
     backgroundColor: "#25292e",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
     gap: 24,
   },
