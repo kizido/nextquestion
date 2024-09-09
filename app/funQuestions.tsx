@@ -355,7 +355,10 @@ export default function FunQuestions() {
           </View>
         )}
         {isSubmitQuestionOpen && (
-          <ScrollView contentContainerStyle={styles.feedbackSubmissionFormContainer} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            contentContainerStyle={styles.feedbackSubmissionFormContainer}
+            keyboardShouldPersistTaps="handled"
+          >
             <Text
               style={{ fontSize: 20, color: "white", textAlign: "center" }}
               maxFontSizeMultiplier={2}
@@ -399,7 +402,10 @@ export default function FunQuestions() {
           </ScrollView>
         )}
         {isRequestFeatureOpen && (
-         <ScrollView contentContainerStyle={styles.feedbackSubmissionFormContainer} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            contentContainerStyle={styles.feedbackSubmissionFormContainer}
+            keyboardShouldPersistTaps="handled"
+          >
             <Text
               style={{ fontSize: 20, color: "white", textAlign: "center" }}
               maxFontSizeMultiplier={2}
@@ -443,7 +449,10 @@ export default function FunQuestions() {
           </ScrollView>
         )}
         {isSubmitBugOpen && (
-          <ScrollView contentContainerStyle={styles.feedbackSubmissionFormContainer} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            contentContainerStyle={styles.feedbackSubmissionFormContainer}
+            keyboardShouldPersistTaps="handled"
+          >
             <Text
               style={{ fontSize: 20, color: "white", textAlign: "center" }}
               maxFontSizeMultiplier={2}

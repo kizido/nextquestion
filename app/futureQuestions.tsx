@@ -300,6 +300,7 @@ export default function FutureQuestions() {
         transparent={true}
         visible={isFeedbackModalOpen}
         onRequestClose={() => setIsFeedbackModalOpen(false)}
+        supportedOrientations={["landscape", "portrait"]}
       >
         <TouchableOpacity
           style={styles.closeButton}

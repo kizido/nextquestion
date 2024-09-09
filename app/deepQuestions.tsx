@@ -290,6 +290,7 @@ export default function DeepQuestions() {
         transparent={true}
         visible={isFeedbackModalOpen}
         onRequestClose={() => setIsFeedbackModalOpen(false)}
+        supportedOrientations={["landscape", "portrait"]}
       >
         <TouchableOpacity
           style={styles.closeButton}

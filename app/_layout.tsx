@@ -12,7 +12,7 @@ export default function RootLayout() {
         headerBackTitle: "Home",
       }}
     >
-      <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen name="index" options={{ headerShown: false, orientation: "portrait" }} />
       {/* <Stack.Screen name="funQuestions" /> */}
     </Stack>
   );
