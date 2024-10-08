@@ -13,9 +13,9 @@ import React, { useState } from "react";
 import { Link } from "expo-router";
 import { addDoc, collection, getFirestore } from "firebase/firestore";
 import app from "../firebaseConfig";
+import * as Application from "expo-application";
 
 const HomeScreen = () => {
-
   const db = getFirestore(app);
 
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
@@ -25,34 +25,39 @@ const HomeScreen = () => {
   const [feedbackValue, setFeedbackValue] = useState<string>("");
 
   const writeQuestionSubmissionToDatabase = async () => {
+    const iosId = await Application.getIosIdForVendorAsync();
     const dbQuestionSubmissions = collection(db, "questionSubmissions");
-    addDoc(dbQuestionSubmissions, { question: feedbackValue });
+    addDoc(dbQuestionSubmissions, { question: feedbackValue, userId: iosId });
     setFeedbackValue("");
   };
   const writeFeatureRequestToDatabase = async () => {
+    const iosId = await Application.getIosIdForVendorAsync();
     const dbFeatureRequests = collection(db, "featureRequests");
-    addDoc(dbFeatureRequests, { feature: feedbackValue });
+    addDoc(dbFeatureRequests, { feature: feedbackValue, userId: iosId });
     setFeedbackValue("");
   };
   const writeBugReportToDatabase = async () => {
+    const iosId = await Application.getIosIdForVendorAsync();
     const dbBugReports = collection(db, "bugReports");
-    addDoc(dbBugReports, { bug: feedbackValue });
+    addDoc(dbBugReports, { bug: feedbackValue, userId: iosId });
     setFeedbackValue("");
   };
 
   return (
     <View style={styles.container}>
-      <View style={{ flexDirection: "row", justifyContent: "center", gap: 16 }}>
-        <Text style={styles.titleText} maxFontSizeMultiplier={1}>
-          Hypothetical
-        </Text>
-        <TouchableOpacity
+      <TouchableOpacity
           style={{
             justifyContent: "center",
             alignItems: "center",
-            width: 48,
-            height: 48,
-            backgroundColor: "orange",
+            width: 40,
+            height: 40,
+            backgroundColor: "black",
+            borderRadius: 32,
+            borderWidth: 1,
+            borderColor: "white",
+            position: "absolute",
+            top: 60,
+            right: 30
           }}
           onPress={() => setIsFeedbackModalOpen(true)}
         >
@@ -61,49 +66,54 @@ const HomeScreen = () => {
             style={{
               fontSize: 32,
               fontWeight: "bold",
+              color: "white"
             }}
           >
             ?
           </Text>
         </TouchableOpacity>
+      <View style={{ flexDirection: "row", justifyContent: "center", gap: 16 }}>
+        <Text style={styles.titleText} maxFontSizeMultiplier={1}>
+          Hypothetical
+        </Text>
       </View>
       <Link href="/funQuestions" asChild>
-        <Pressable style={{ ...styles.button, backgroundColor: "#007AFF" }}>
+        <Pressable style={{ ...styles.button, backgroundColor: "#c97353" }}>
           <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
             Fun Questions
           </Text>
         </Pressable>
       </Link>
       <Link href="/deepQuestions" asChild>
-        <Pressable style={{ ...styles.button, backgroundColor: "#34C759" }}>
+        <Pressable style={{ ...styles.button, backgroundColor: "#d9b991" }}>
           <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
             Deep Questions
           </Text>
         </Pressable>
       </Link>
       <Link href="/personalQuestions" asChild>
-        <Pressable style={{ ...styles.button, backgroundColor: "#FF3B30" }}>
+        <Pressable style={{ ...styles.button, backgroundColor: "#6cc48c" }}>
           <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
             Personal Questions
           </Text>
         </Pressable>
       </Link>
       <Link href="/fantasyQuestions" asChild>
-        <Pressable style={{ ...styles.button, backgroundColor: "#FF9500" }}>
+        <Pressable style={{ ...styles.button, backgroundColor: "#c5adc7" }}>
           <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
             Fantasy Questions
           </Text>
         </Pressable>
       </Link>
       <Link href="/futureQuestions" asChild>
-        <Pressable style={{ ...styles.button, backgroundColor: "#FF2D55" }}>
+        <Pressable style={{ ...styles.button, backgroundColor: "#9dcbd4" }}>
           <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
             Future Questions
           </Text>
         </Pressable>
       </Link>
       <Link href="/mixupQuestions" asChild>
-        <Pressable style={{ ...styles.button, backgroundColor: "#5856D6" }}>
+        <Pressable style={{ ...styles.button, backgroundColor: "#e76f51" }}>
           <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
             Mix It Up
           </Text>
@@ -328,19 +338,19 @@ const styles = StyleSheet.create({
   },
   titleText: {
     color: "white",
-    fontSize: 36,
-    fontWeight: "500",
+    fontSize: 40,
+    fontWeight: "600",
     marginBottom: 32,
   },
   button: {
-    width: "100%", // Set a fixed width
+    width: "90%", // Set a fixed width
     height: 64, // Set a fixed height
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 4,
+    borderRadius: 16,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 20,
     lineHeight: 21,
     fontWeight: "bold",
     letterSpacing: 0.25,
@@ -348,13 +358,21 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 8,
     top: 60,
-    right: 40,
+    right: 30,
     zIndex: 1,
+    backgroundColor: "black",
+    borderRadius: 32,
+    width: 48,
+    height: 48,
+    borderWidth: 1,
+    borderColor: "white",
   },
   closeButtonText: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
     color: "white",
   },

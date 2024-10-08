@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Button,
   Keyboard,
@@ -13,12 +13,26 @@ import {
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+// import db from "../firebaseConfig";
 import app from "../firebaseConfig";
-import { collection, getDocs, addDoc, getFirestore } from "firebase/firestore";
+import {
+  collection,
+  addDoc,
+  getFirestore,
+  where,
+  query,
+  getDocs,
+  deleteDoc,
+  updateDoc,
+  Transaction,
+} from "firebase/firestore";
 import questions from "../deepQuestions.json";
+import * as Application from "expo-application";
+import Entypo from "@expo/vector-icons/Entypo";
 
 export default function DeepQuestions() {
   const db = getFirestore(app);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showPartyModal, setShowPartyModal] = useState(false);
 
@@ -36,6 +50,11 @@ export default function DeepQuestions() {
   const [isRequestFeatureOpen, setIsRequestFeatureOpen] = useState(false);
   const [isSubmitBugOpen, setIsSubmitBugOpen] = useState(false);
   const [feedbackValue, setFeedbackValue] = useState<string>("");
+
+  const [questionLikeState, setQuestionLikeState] = useState(false);
+  const [questionDislikeState, setQuestionDislikeState] = useState(false);
+
+  const questionLikeInProgress = useRef(false);
 
   const shuffleArray = (array: string[]) => {
     let newArray = array.slice();
@@ -158,7 +177,6 @@ export default function DeepQuestions() {
       while (true) {
         const value = await AsyncStorage.getItem(`party${index}`);
         if (value === null) {
-          console.log("INDEX FOUND: " + index);
           return index;
         }
         index++;
@@ -170,9 +188,6 @@ export default function DeepQuestions() {
   const storeCurrentParty = async () => {
     try {
       const storageKey = await getFirstAvailablePartyKey();
-      console.log(
-        "key: " + "party" + storageKey + ", value: " + JSON.stringify(party)
-      );
       await AsyncStorage.setItem(`party${storageKey}`, JSON.stringify(party));
       setPlayers(["", ""]);
       setParty([]);
@@ -188,7 +203,6 @@ export default function DeepQuestions() {
       let index = 0;
       while (true) {
         const value = await AsyncStorage.getItem(`party${index}`);
-        console.log("Value " + index + ": " + value);
         if (value === null) {
           setLoadedParties(partiesLoaded);
           break;
@@ -225,31 +239,57 @@ export default function DeepQuestions() {
       console.log(error);
     }
   };
+  const updateNewQuestionsToDB = async () => {
+    const dbQuestions = collection(db, "questions");
+    const dbQuestionsSnapshot = await getDocs(dbQuestions);
+    const dbQuestionDocumentList = dbQuestionsSnapshot.docs.map((doc) =>
+      doc.data()
+    );
 
+    for (let i = 0; i < questions.length; i++) {
+      // If the question in the JSON is not in the online DB, add it
+      if (
+        !dbQuestionDocumentList.some((doc) => doc.question === questions[i])
+      ) {
+        addDoc(dbQuestions, {
+          question: questions[i],
+          packId: "base",
+          category: "deep",
+        });
+      }
+    }
+  };
   const getDbQuestions = async () => {
     // const dbQuestions = collection(db, "questions");
     // const dbQuestionsSnapshot = await getDocs(dbQuestions);
     // const dbQuestionsList = dbQuestionsSnapshot.docs.map((doc) => doc.data());
-    // console.log(dbQuestionsList);
   };
   const writeQuestionSubmissionToDatabase = async () => {
+    const iosId = await Application.getIosIdForVendorAsync();
     const dbQuestionSubmissions = collection(db, "questionSubmissions");
-    addDoc(dbQuestionSubmissions, { question: feedbackValue });
+    addDoc(dbQuestionSubmissions, { question: feedbackValue, userId: iosId });
     setFeedbackValue("");
   };
   const writeFeatureRequestToDatabase = async () => {
+    const iosId = await Application.getIosIdForVendorAsync();
     const dbFeatureRequests = collection(db, "featureRequests");
-    addDoc(dbFeatureRequests, { feature: feedbackValue });
+    addDoc(dbFeatureRequests, { feature: feedbackValue, userId: iosId });
     setFeedbackValue("");
   };
   const writeBugReportToDatabase = async () => {
+    const iosId = await Application.getIosIdForVendorAsync();
     const dbBugReports = collection(db, "bugReports");
-    addDoc(dbBugReports, { bug: feedbackValue });
+    addDoc(dbBugReports, { bug: feedbackValue, userId: iosId });
     setFeedbackValue("");
   };
   useEffect(() => {
     getCurrentParty();
-    getDbQuestions();
+    // getDbQuestions();
+
+    // RUN THIS CODE TO SYNC ONLINE DB TO LOCAL
+    // updateNewQuestionsToDB();
+
+    // Application.getIosIdForVendorAsync().then((iosId) => { console.log(iosId )});
   }, []);
   useEffect(() => {
     if (party.length > 0) {
@@ -263,7 +303,138 @@ export default function DeepQuestions() {
       loadPartySelection();
     }
   }, [showPartyModal]);
+  useEffect(() => {
+    const getQuestionLikeState = async () => {
+      setQuestionLikeState(false);
+      setQuestionDislikeState(false);
+      const iosId = await Application.getIosIdForVendorAsync();
 
+      const questionsCol = collection(db, "questions");
+      const q = query(questionsCol, where("question", "==", currentQuestion));
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        console.log("QUESTION FOUND!");
+        const doc = querySnapshot.docs[0];
+
+        const docRef = doc.ref;
+
+        const likersCol = collection(docRef, "likeIds");
+        const likersQ = query(likersCol, where("id", "==", iosId));
+        const likerSnapshot = await getDocs(likersQ);
+
+        if (!likerSnapshot.empty) {
+          console.log("IOS ID FOUND IN LIKERS!");
+          setQuestionLikeState(true);
+        } else {
+          console.log("IOS ID NOT FOUND IN LIKERS!");
+          const dislikersCol = collection(docRef, "dislikeIds");
+          const dislikersQ = query(dislikersCol, where("id", "==", iosId));
+          const dislikerSnapshot = await getDocs(dislikersQ);
+
+          if (!dislikerSnapshot.empty) {
+            console.log("IOS ID FOUND IN DISLIKERS");
+            setQuestionDislikeState(true);
+          }
+        }
+      } else {
+        console.log("QUESTION NOT FOUND!");
+      }
+    };
+    getQuestionLikeState();
+  }, [currentQuestion]);
+  const likeQuestion = async () => {
+    if (questionLikeInProgress.current) {
+      return;
+    }
+    questionLikeInProgress.current = true;
+    const iosId = await Application.getIosIdForVendorAsync();
+
+    const questionCol = collection(db, "questions");
+    const questionQuery = query(
+      questionCol,
+      where("question", "==", currentQuestion)
+    );
+    const questionSnapshot = await getDocs(questionQuery);
+    if (!questionSnapshot.empty) {
+      console.log("FOUND QUESTION TO LIKE");
+      const questionDoc = questionSnapshot.docs[0].ref;
+      const questionLikeCol = collection(questionDoc, "likeIds");
+      if (questionLikeState === true) {
+        const questionLikerQuery = query(
+          questionLikeCol,
+          where("id", "==", iosId)
+        );
+        const questionLikerSnapshot = await getDocs(questionLikerQuery);
+        const questionLikerDoc = questionLikerSnapshot.docs[0].ref;
+        deleteDoc(questionLikerDoc);
+        setQuestionLikeState(false);
+      } else {
+        // Delete id from dislike id list if applicable (so you can't have like and dislike both selected simultaneously)
+        const questionDislikeCol = collection(questionDoc, "dislikeIds");
+        const questionDislikeQuery = query(
+          questionDislikeCol,
+          where("id", "==", iosId)
+        );
+        const questionDislikeSnapshot = await getDocs(questionDislikeQuery);
+        if (!questionDislikeSnapshot.empty) {
+          const questionDislikeDoc = questionDislikeSnapshot.docs[0].ref;
+          deleteDoc(questionDislikeDoc);
+        }
+
+        addDoc(questionLikeCol, { id: iosId });
+        setQuestionDislikeState(false);
+        setQuestionLikeState(true);
+      }
+    }
+    questionLikeInProgress.current = false;
+  };
+  const dislikeQuestion = async () => {
+    if (questionLikeInProgress.current) {
+      return;
+    }
+    questionLikeInProgress.current = true;
+
+    console.log("QUESTION DISLIKE BUTTON PRESSED");
+    const iosId = await Application.getIosIdForVendorAsync();
+
+    const questionCol = collection(db, "questions");
+    const questionQuery = query(
+      questionCol,
+      where("question", "==", currentQuestion)
+    );
+    const questionSnapshot = await getDocs(questionQuery);
+    if (!questionSnapshot.empty) {
+      console.log("FOUND QUESTION TO DISLIKE");
+      const questionDoc = questionSnapshot.docs[0].ref;
+      const questionDislikeCol = collection(questionDoc, "dislikeIds");
+      if (questionDislikeState === true) {
+        const questionDislikerQuery = query(
+          questionDislikeCol,
+          where("id", "==", iosId)
+        );
+        const questionDislikerSnapshot = await getDocs(questionDislikerQuery);
+        const questionDislikerDoc = questionDislikerSnapshot.docs[0].ref;
+        deleteDoc(questionDislikerDoc);
+        setQuestionDislikeState(false);
+      } else {
+        // Delete id from like id list if applicable
+        const questionLikeCol = collection(questionDoc, "likeIds");
+        const questionLikeQuery = query(
+          questionLikeCol,
+          where("id", "==", iosId)
+        );
+        const questionLikeSnapshot = await getDocs(questionLikeQuery);
+        if (!questionLikeSnapshot.empty) {
+          const questionLikeDoc = questionLikeSnapshot.docs[0].ref;
+          deleteDoc(questionLikeDoc);
+        }
+        addDoc(questionDislikeCol, { id: iosId });
+        setQuestionLikeState(false);
+        setQuestionDislikeState(true);
+      }
+    }
+    questionLikeInProgress.current = false;
+  };
   return (
     <View style={styles.container}>
       <View
@@ -273,11 +444,25 @@ export default function DeepQuestions() {
           justifyContent: "flex-end",
         }}
       >
-        <TouchableOpacity style={{justifyContent: "center", alignItems: "center", width: 48, height: 48, backgroundColor: "orange",}} onPress={() => setIsFeedbackModalOpen(true)}>
-          <Text maxFontSizeMultiplier={1.3}
+        <TouchableOpacity
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            width: 40,
+            height: 40,
+            backgroundColor: "black",
+            borderRadius: 32,
+            borderWidth: 1,
+            borderColor: "white",
+          }}
+          onPress={() => setIsFeedbackModalOpen(true)}
+        >
+          <Text
+            maxFontSizeMultiplier={1.3}
             style={{
               fontSize: 32,
               fontWeight: "bold",
+              color: "white"
             }}
           >
             ?
@@ -290,7 +475,6 @@ export default function DeepQuestions() {
         transparent={true}
         visible={isFeedbackModalOpen}
         onRequestClose={() => setIsFeedbackModalOpen(false)}
-        supportedOrientations={["landscape", "portrait"]}
       >
         <TouchableOpacity
           style={styles.closeButton}
@@ -313,7 +497,10 @@ export default function DeepQuestions() {
               style={styles.feedbackModalButton}
               onPress={() => setIsSubmitQuestionOpen(true)}
             >
-              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>
+              <Text
+                style={styles.feedbackModalText}
+                maxFontSizeMultiplier={1.5}
+              >
                 Submit a New Question
               </Text>
             </TouchableOpacity>
@@ -321,19 +508,35 @@ export default function DeepQuestions() {
               style={styles.feedbackModalButton}
               onPress={() => setIsRequestFeatureOpen(true)}
             >
-              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>Request a Feature</Text>
+              <Text
+                style={styles.feedbackModalText}
+                maxFontSizeMultiplier={1.5}
+              >
+                Request a Feature
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.feedbackModalButton}
               onPress={() => setIsSubmitBugOpen(true)}
             >
-              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>Report a Bug</Text>
+              <Text
+                style={styles.feedbackModalText}
+                maxFontSizeMultiplier={1.5}
+              >
+                Report a Bug
+              </Text>
             </TouchableOpacity>
           </View>
         )}
         {isSubmitQuestionOpen && (
-          <ScrollView contentContainerStyle={styles.feedbackSubmissionFormContainer} keyboardShouldPersistTaps="handled">
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
+          <ScrollView
+            contentContainerStyle={styles.feedbackSubmissionFormContainer}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text
+              style={{ fontSize: 20, color: "white", textAlign: "center" }}
+              maxFontSizeMultiplier={2}
+            >
               Enter a Question Submission
             </Text>
             <TextInput
@@ -373,8 +576,14 @@ export default function DeepQuestions() {
           </ScrollView>
         )}
         {isRequestFeatureOpen && (
-          <ScrollView contentContainerStyle={styles.feedbackSubmissionFormContainer} keyboardShouldPersistTaps="handled">
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
+          <ScrollView
+            contentContainerStyle={styles.feedbackSubmissionFormContainer}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text
+              style={{ fontSize: 20, color: "white", textAlign: "center" }}
+              maxFontSizeMultiplier={2}
+            >
               Enter a Feature Request
             </Text>
             <TextInput
@@ -414,8 +623,14 @@ export default function DeepQuestions() {
           </ScrollView>
         )}
         {isSubmitBugOpen && (
-          <ScrollView contentContainerStyle={styles.feedbackSubmissionFormContainer} keyboardShouldPersistTaps="handled">
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
+          <ScrollView
+            contentContainerStyle={styles.feedbackSubmissionFormContainer}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text
+              style={{ fontSize: 20, color: "white", textAlign: "center" }}
+              maxFontSizeMultiplier={2}
+            >
               Report a Bug
             </Text>
             <TextInput
@@ -519,6 +734,20 @@ export default function DeepQuestions() {
         <Text style={styles.questionText} maxFontSizeMultiplier={1}>
           {currentQuestion}
         </Text>
+        <View style={styles.arrowRow}>
+          <Entypo
+            name="thumbs-up"
+            size={40}
+            color={questionLikeState ? "green" : "white"}
+            onPress={() => likeQuestion()}
+          />
+          <Entypo
+            name="thumbs-down"
+            size={40}
+            color={questionDislikeState ? "red" : "white"}
+            onPress={() => dislikeQuestion()}
+          />
+        </View>
       </View>
       <StatusBar style="auto" />
       <View style={styles.arrowRow}>
@@ -692,6 +921,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     paddingHorizontal: 10,
+    gap: 16,
   },
   questionText: {
     color: "white",
@@ -778,13 +1008,21 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 8,
     top: 60,
-    right: 40,
+    right: 30,
     zIndex: 1,
+    backgroundColor: "black",
+    borderRadius: 32,
+    width: 48,
+    height: 48,
+    borderWidth: 1,
+    borderColor: "white",
   },
   closeButtonText: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
     color: "white",
   },

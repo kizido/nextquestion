@@ -7,9 +7,10 @@ export default function RootLayout() {
     <Stack
       screenOptions={{
         headerTransparent: false,
-        headerStyle: { backgroundColor: "#1C1C1E" },
+        headerStyle: { backgroundColor: "#1C1C1E"},
         headerTitle: "",
         headerBackTitle: "Home",
+        headerTintColor: "orange"
       }}
     >
       <Stack.Screen name="index" options={{ headerShown: false, orientation: "portrait" }} />

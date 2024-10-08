@@ -1,5 +1,5 @@
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Button,
   Keyboard,
@@ -19,7 +19,9 @@ import fantasyQuestions from "../fantasyQuestions.json";
 import futureQuestions from "../futureQuestions.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import app from "../firebaseConfig";
-import { collection, getDocs, addDoc, getFirestore } from "firebase/firestore";
+import { collection, getDocs, addDoc, getFirestore, query, where, deleteDoc } from "firebase/firestore";
+import * as Application from "expo-application";
+import { Entypo } from "@expo/vector-icons";
 
 const questions = [
   ...funQuestions,
@@ -49,6 +51,11 @@ export default function MixupQuestions() {
   const [isSubmitBugOpen, setIsSubmitBugOpen] = useState(false);
   const [feedbackValue, setFeedbackValue] = useState<string>("");
 
+  const [questionLikeState, setQuestionLikeState] = useState(false);
+  const [questionDislikeState, setQuestionDislikeState] = useState(false);
+
+  const questionLikeInProgress = useRef(false);
+
   const shuffleArray = (array: string[]) => {
     let newArray = array.slice();
     for (let i = newArray.length - 1; i > 0; i--) {
@@ -63,7 +70,7 @@ export default function MixupQuestions() {
   const [currentQuestion, setCurrentQuestion] = useState(shuffledQuestions[0]);
 
   const nextQuestion = () => {
-    console.log(getData("party1"));
+    // console.log(getData("party1"));
 
     let nextIndex = currentIndex + 1;
 
@@ -184,9 +191,9 @@ export default function MixupQuestions() {
   const storeCurrentParty = async () => {
     try {
       const storageKey = await getFirstAvailablePartyKey();
-      console.log(
-        "key: " + "party" + storageKey + ", value: " + JSON.stringify(party)
-      );
+      // console.log(
+      //   "key: " + "party" + storageKey + ", value: " + JSON.stringify(party)
+      // );
       await AsyncStorage.setItem(`party${storageKey}`, JSON.stringify(party));
       setPlayers(["", ""]);
       setParty([]);
@@ -202,7 +209,7 @@ export default function MixupQuestions() {
       let index = 0;
       while (true) {
         const value = await AsyncStorage.getItem(`party${index}`);
-        console.log("Value " + index + ": " + value);
+        // console.log("Value " + index + ": " + value);
         if (value === null) {
           setLoadedParties(partiesLoaded);
           break;
@@ -244,22 +251,119 @@ export default function MixupQuestions() {
     const dbQuestions = collection(db, "questions");
     const dbQuestionsSnapshot = await getDocs(dbQuestions);
     const dbQuestionsList = dbQuestionsSnapshot.docs.map((doc) => doc.data());
-    console.log(dbQuestionsList);
+    // console.log(dbQuestionsList);
   };
   const writeQuestionSubmissionToDatabase = async () => {
+    const iosId = await Application.getIosIdForVendorAsync();
     const dbQuestionSubmissions = collection(db, "questionSubmissions");
-    addDoc(dbQuestionSubmissions, { question: feedbackValue });
+    addDoc(dbQuestionSubmissions, { question: feedbackValue, userId: iosId });
     setFeedbackValue("");
   };
   const writeFeatureRequestToDatabase = async () => {
+    const iosId = await Application.getIosIdForVendorAsync();
     const dbFeatureRequests = collection(db, "featureRequests");
-    addDoc(dbFeatureRequests, { feature: feedbackValue });
+    addDoc(dbFeatureRequests, { feature: feedbackValue, userId: iosId });
     setFeedbackValue("");
   };
   const writeBugReportToDatabase = async () => {
+    const iosId = await Application.getIosIdForVendorAsync();
     const dbBugReports = collection(db, "bugReports");
-    addDoc(dbBugReports, { bug: feedbackValue });
+    addDoc(dbBugReports, { bug: feedbackValue, userId: iosId });
     setFeedbackValue("");
+  };
+  const likeQuestion = async () => {
+    if (questionLikeInProgress.current) {
+      return;
+    }
+    questionLikeInProgress.current = true;
+    const iosId = await Application.getIosIdForVendorAsync();
+
+    const questionCol = collection(db, "questions");
+    const questionQuery = query(
+      questionCol,
+      where("question", "==", currentQuestion)
+    );
+    const questionSnapshot = await getDocs(questionQuery);
+    if (!questionSnapshot.empty) {
+      console.log("FOUND QUESTION TO LIKE");
+      const questionDoc = questionSnapshot.docs[0].ref;
+      const questionLikeCol = collection(questionDoc, "likeIds");
+      if (questionLikeState === true) {
+        const questionLikerQuery = query(
+          questionLikeCol,
+          where("id", "==", iosId)
+        );
+        const questionLikerSnapshot = await getDocs(questionLikerQuery);
+        const questionLikerDoc = questionLikerSnapshot.docs[0].ref;
+        deleteDoc(questionLikerDoc);
+        setQuestionLikeState(false);
+      } else {
+        // Delete id from dislike id list if applicable (so you can't have like and dislike both selected simultaneously)
+        const questionDislikeCol = collection(questionDoc, "dislikeIds");
+        const questionDislikeQuery = query(
+          questionDislikeCol,
+          where("id", "==", iosId)
+        );
+        const questionDislikeSnapshot = await getDocs(questionDislikeQuery);
+        if (!questionDislikeSnapshot.empty) {
+          const questionDislikeDoc = questionDislikeSnapshot.docs[0].ref;
+          deleteDoc(questionDislikeDoc);
+        }
+
+        addDoc(questionLikeCol, { id: iosId });
+        setQuestionDislikeState(false);
+        setQuestionLikeState(true);
+      }
+    }
+    questionLikeInProgress.current = false;
+  };
+  const dislikeQuestion = async () => {
+    if (questionLikeInProgress.current) {
+      return;
+    }
+    questionLikeInProgress.current = true;
+
+    console.log("QUESTION DISLIKE BUTTON PRESSED");
+    const iosId = await Application.getIosIdForVendorAsync();
+
+    const questionCol = collection(db, "questions");
+    const questionQuery = query(
+      questionCol,
+      where("question", "==", currentQuestion)
+    );
+    const questionSnapshot = await getDocs(questionQuery);
+    if (!questionSnapshot.empty) {
+      console.log("FOUND QUESTION TO DISLIKE");
+      const questionDoc = questionSnapshot.docs[0].ref;
+      const questionDislikeCol = collection(questionDoc, "dislikeIds");
+      if (questionDislikeState === true) {
+        const questionDislikerQuery = query(
+          questionDislikeCol,
+          where("id", "==", iosId)
+        );
+        const questionDislikerSnapshot = await getDocs(questionDislikerQuery);
+        const questionDislikerDoc = questionDislikerSnapshot.docs[0].ref;
+        deleteDoc(questionDislikerDoc);
+        setQuestionDislikeState(false);
+      } else {
+        // Delete id from like id list if applicable
+        const questionLikeCol = collection(questionDoc, "likeIds");
+        const questionLikeQuery = query(
+          questionLikeCol,
+          where("id", "==", iosId)
+        );
+        const questionLikeSnapshot = await getDocs(questionLikeQuery);
+        if (!questionLikeSnapshot.empty) {
+          const questionLikeDoc = questionLikeSnapshot.docs[0].ref;
+          deleteDoc(questionLikeDoc);
+        }
+
+        addDoc(questionDislikeCol, { id: iosId });
+        setQuestionLikeState(false);
+        setQuestionDislikeState(true);
+      }
+    }
+    questionLikeInProgress.current = false;
   };
   useEffect(() => {
     getCurrentParty();
@@ -287,11 +391,25 @@ export default function MixupQuestions() {
           justifyContent: "flex-end",
         }}
       >
-        <TouchableOpacity style={{justifyContent: "center", alignItems: "center", width: 48, height: 48, backgroundColor: "orange",}} onPress={() => setIsFeedbackModalOpen(true)}>
-          <Text maxFontSizeMultiplier={1.3}
+        <TouchableOpacity
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            width: 40,
+            height: 40,
+            backgroundColor: "black",
+            borderRadius: 32,
+            borderWidth: 1,
+            borderColor: "white",
+          }}
+          onPress={() => setIsFeedbackModalOpen(true)}
+        >
+          <Text
+            maxFontSizeMultiplier={1.3}
             style={{
               fontSize: 32,
               fontWeight: "bold",
+              color: "white"
             }}
           >
             ?
@@ -327,7 +445,10 @@ export default function MixupQuestions() {
               style={styles.feedbackModalButton}
               onPress={() => setIsSubmitQuestionOpen(true)}
             >
-              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>
+              <Text
+                style={styles.feedbackModalText}
+                maxFontSizeMultiplier={1.5}
+              >
                 Submit a New Question
               </Text>
             </TouchableOpacity>
@@ -335,19 +456,35 @@ export default function MixupQuestions() {
               style={styles.feedbackModalButton}
               onPress={() => setIsRequestFeatureOpen(true)}
             >
-              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>Request a Feature</Text>
+              <Text
+                style={styles.feedbackModalText}
+                maxFontSizeMultiplier={1.5}
+              >
+                Request a Feature
+              </Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.feedbackModalButton}
               onPress={() => setIsSubmitBugOpen(true)}
             >
-              <Text style={styles.feedbackModalText} maxFontSizeMultiplier={1.5}>Report a Bug</Text>
+              <Text
+                style={styles.feedbackModalText}
+                maxFontSizeMultiplier={1.5}
+              >
+                Report a Bug
+              </Text>
             </TouchableOpacity>
           </View>
         )}
         {isSubmitQuestionOpen && (
-          <ScrollView contentContainerStyle={styles.feedbackSubmissionFormContainer} keyboardShouldPersistTaps="handled">
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
+          <ScrollView
+            contentContainerStyle={styles.feedbackSubmissionFormContainer}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text
+              style={{ fontSize: 20, color: "white", textAlign: "center" }}
+              maxFontSizeMultiplier={2}
+            >
               Enter a Question Submission
             </Text>
             <TextInput
@@ -387,8 +524,14 @@ export default function MixupQuestions() {
           </ScrollView>
         )}
         {isRequestFeatureOpen && (
-          <ScrollView contentContainerStyle={styles.feedbackSubmissionFormContainer} keyboardShouldPersistTaps="handled">
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
+          <ScrollView
+            contentContainerStyle={styles.feedbackSubmissionFormContainer}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text
+              style={{ fontSize: 20, color: "white", textAlign: "center" }}
+              maxFontSizeMultiplier={2}
+            >
               Enter a Feature Request
             </Text>
             <TextInput
@@ -428,8 +571,14 @@ export default function MixupQuestions() {
           </ScrollView>
         )}
         {isSubmitBugOpen && (
-          <ScrollView contentContainerStyle={styles.feedbackSubmissionFormContainer} keyboardShouldPersistTaps="handled">
-            <Text style={{ fontSize: 20, color: "white", textAlign: "center" }} maxFontSizeMultiplier={2}>
+          <ScrollView
+            contentContainerStyle={styles.feedbackSubmissionFormContainer}
+            keyboardShouldPersistTaps="handled"
+          >
+            <Text
+              style={{ fontSize: 20, color: "white", textAlign: "center" }}
+              maxFontSizeMultiplier={2}
+            >
               Report a Bug
             </Text>
             <TextInput
@@ -533,6 +682,20 @@ export default function MixupQuestions() {
         <Text style={styles.questionText} maxFontSizeMultiplier={1}>
           {currentQuestion}
         </Text>
+        <View style={styles.arrowRow}>
+          <Entypo
+            name="thumbs-up"
+            size={40}
+            color={questionLikeState ? "green" : "white"}
+            onPress={() => likeQuestion()}
+          />
+          <Entypo
+            name="thumbs-down"
+            size={40}
+            color={questionDislikeState ? "red" : "white"}
+            onPress={() => dislikeQuestion()}
+          />
+        </View>
       </View>
       <StatusBar style="auto" />
       <View style={styles.arrowRow}>
@@ -706,6 +869,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "100%",
     paddingHorizontal: 10,
+    gap: 16,
   },
   questionText: {
     color: "white",
@@ -792,13 +956,21 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 8,
     top: 60,
-    right: 40,
+    right: 30,
     zIndex: 1,
+    backgroundColor: "black",
+    borderRadius: 32,
+    width: 48,
+    height: 48,
+    borderWidth: 1,
+    borderColor: "white",
   },
   closeButtonText: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: "bold",
     color: "white",
   },
