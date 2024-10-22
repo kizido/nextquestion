@@ -14,6 +14,7 @@ import { Link } from "expo-router";
 import { addDoc, collection, getFirestore } from "firebase/firestore";
 import app from "../firebaseConfig";
 import * as Application from "expo-application";
+import { AntDesign } from "@expo/vector-icons";
 
 const HomeScreen = () => {
   const db = getFirestore(app);
@@ -61,16 +62,7 @@ const HomeScreen = () => {
           }}
           onPress={() => setIsFeedbackModalOpen(true)}
         >
-          <Text
-            maxFontSizeMultiplier={1.3}
-            style={{
-              fontSize: 32,
-              fontWeight: "bold",
-              color: "white"
-            }}
-          >
-            ?
-          </Text>
+          <AntDesign name="form" size={20} color="white" />
         </TouchableOpacity>
       <View style={{ flexDirection: "row", justifyContent: "center", gap: 16 }}>
         <Text style={styles.titleText} maxFontSizeMultiplier={1}>
@@ -352,7 +344,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 20,
     lineHeight: 21,
-    fontWeight: "bold",
+    fontWeight: "800",
     letterSpacing: 0.25,
     color: "white",
   },

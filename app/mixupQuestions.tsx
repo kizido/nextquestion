@@ -19,9 +19,18 @@ import fantasyQuestions from "../fantasyQuestions.json";
 import futureQuestions from "../futureQuestions.json";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import app from "../firebaseConfig";
-import { collection, getDocs, addDoc, getFirestore, query, where, deleteDoc } from "firebase/firestore";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import {
+  collection,
+  getDocs,
+  addDoc,
+  getFirestore,
+  query,
+  where,
+  deleteDoc,
+} from "firebase/firestore";
 import * as Application from "expo-application";
-import { Entypo } from "@expo/vector-icons";
+import Entypo from "@expo/vector-icons/Entypo";
 
 const questions = [
   ...funQuestions,
@@ -33,6 +42,7 @@ const questions = [
 
 export default function MixupQuestions() {
   const db = getFirestore(app);
+
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showPartyModal, setShowPartyModal] = useState(false);
 
@@ -70,8 +80,6 @@ export default function MixupQuestions() {
   const [currentQuestion, setCurrentQuestion] = useState(shuffledQuestions[0]);
 
   const nextQuestion = () => {
-    // console.log(getData("party1"));
-
     let nextIndex = currentIndex + 1;
 
     if (nextIndex < questions.length) {
@@ -179,7 +187,6 @@ export default function MixupQuestions() {
       while (true) {
         const value = await AsyncStorage.getItem(`party${index}`);
         if (value === null) {
-          console.log("INDEX FOUND: " + index);
           return index;
         }
         index++;
@@ -191,9 +198,6 @@ export default function MixupQuestions() {
   const storeCurrentParty = async () => {
     try {
       const storageKey = await getFirstAvailablePartyKey();
-      // console.log(
-      //   "key: " + "party" + storageKey + ", value: " + JSON.stringify(party)
-      // );
       await AsyncStorage.setItem(`party${storageKey}`, JSON.stringify(party));
       setPlayers(["", ""]);
       setParty([]);
@@ -209,7 +213,6 @@ export default function MixupQuestions() {
       let index = 0;
       while (true) {
         const value = await AsyncStorage.getItem(`party${index}`);
-        // console.log("Value " + index + ": " + value);
         if (value === null) {
           setLoadedParties(partiesLoaded);
           break;
@@ -246,12 +249,30 @@ export default function MixupQuestions() {
       console.log(error);
     }
   };
-
-  const getDbQuestions = async () => {
+  const updateNewQuestionsToDB = async () => {
     const dbQuestions = collection(db, "questions");
     const dbQuestionsSnapshot = await getDocs(dbQuestions);
-    const dbQuestionsList = dbQuestionsSnapshot.docs.map((doc) => doc.data());
-    // console.log(dbQuestionsList);
+    const dbQuestionDocumentList = dbQuestionsSnapshot.docs.map((doc) =>
+      doc.data()
+    );
+
+    for (let i = 0; i < questions.length; i++) {
+      // If the question in the JSON is not in the online DB, add it
+      if (
+        !dbQuestionDocumentList.some((doc) => doc.question === questions[i])
+      ) {
+        addDoc(dbQuestions, {
+          question: questions[i],
+          packId: "base",
+          category: "fun",
+        });
+      }
+    }
+  };
+  const getDbQuestions = async () => {
+    // const dbQuestions = collection(db, "questions");
+    // const dbQuestionsSnapshot = await getDocs(dbQuestions);
+    // const dbQuestionsList = dbQuestionsSnapshot.docs.map((doc) => doc.data());
   };
   const writeQuestionSubmissionToDatabase = async () => {
     const iosId = await Application.getIosIdForVendorAsync();
@@ -271,6 +292,76 @@ export default function MixupQuestions() {
     addDoc(dbBugReports, { bug: feedbackValue, userId: iosId });
     setFeedbackValue("");
   };
+  useEffect(() => {
+    getCurrentParty();
+    // getDbQuestions();
+
+    // RUN THIS CODE TO SYNC ONLINE DB TO LOCAL
+    // updateNewQuestionsToDB();
+
+    // Application.getIosIdForVendorAsync().then((iosId) => { console.log(iosId )});
+  }, []);
+  useEffect(() => {
+    if (party.length > 0) {
+      setIsParty(true);
+    } else {
+      setIsParty(false);
+    }
+  }, [party]);
+  useEffect(() => {
+    if (showPartyModal) {
+      loadPartySelection();
+    }
+  }, [showPartyModal]);
+  useEffect(() => {
+    let isCancelled = false;
+
+    const getQuestionLikeState = async () => {
+      setQuestionLikeState(false);
+      setQuestionDislikeState(false);
+      const iosId = await Application.getIosIdForVendorAsync();
+
+      const questionsCol = collection(db, "questions");
+      const q = query(questionsCol, where("question", "==", currentQuestion));
+      const querySnapshot = await getDocs(q);
+      if (!isCancelled) {
+        if (!querySnapshot.empty) {
+          console.log("QUESTION FOUND!");
+          const doc = querySnapshot.docs[0];
+
+          const docRef = doc.ref;
+
+          const likersCol = collection(docRef, "likeIds");
+          const likersQ = query(likersCol, where("id", "==", iosId));
+          const likerSnapshot = await getDocs(likersQ);
+
+          if (!isCancelled) {
+            if (!likerSnapshot.empty) {
+              console.log("IOS ID FOUND IN LIKERS!");
+              setQuestionLikeState(true);
+            } else {
+              console.log("IOS ID NOT FOUND IN LIKERS!");
+              const dislikersCol = collection(docRef, "dislikeIds");
+              const dislikersQ = query(dislikersCol, where("id", "==", iosId));
+              const dislikerSnapshot = await getDocs(dislikersQ);
+
+              if (!isCancelled && !dislikerSnapshot.empty) {
+                console.log("IOS ID FOUND IN DISLIKERS");
+                setQuestionDislikeState(true);
+              }
+            }
+          }
+        } else {
+          console.log("QUESTION NOT FOUND!");
+        }
+      }
+    };
+    getQuestionLikeState();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [currentQuestion]);
   const likeQuestion = async () => {
     if (questionLikeInProgress.current) {
       return;
@@ -365,26 +456,9 @@ export default function MixupQuestions() {
     }
     questionLikeInProgress.current = false;
   };
-  useEffect(() => {
-    getCurrentParty();
-    getDbQuestions();
-  }, []);
-  useEffect(() => {
-    if (party.length > 0) {
-      setIsParty(true);
-    } else {
-      setIsParty(false);
-    }
-  }, [party]);
-  useEffect(() => {
-    if (showPartyModal) {
-      loadPartySelection();
-    }
-  }, [showPartyModal]);
-
   return (
     <View style={styles.container}>
-      <View
+      {/* <View
         style={{
           width: "100%",
           flexDirection: "row",
@@ -409,20 +483,19 @@ export default function MixupQuestions() {
             style={{
               fontSize: 32,
               fontWeight: "bold",
-              color: "white"
+              color: "white",
             }}
           >
             ?
           </Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       <Modal
         animationType="slide"
         transparent={true}
         visible={isFeedbackModalOpen}
         onRequestClose={() => setIsFeedbackModalOpen(false)}
-        supportedOrientations={["landscape", "portrait"]}
       >
         <TouchableOpacity
           style={styles.closeButton}
@@ -678,28 +751,102 @@ export default function MixupQuestions() {
           </Text>
         </TouchableOpacity>
       )} */}
+
+      {/* <Text style={{ color: "white", fontSize: 24, fontWeight: 800 }}>
+        Hypothetical
+      </Text> */}
+      <View>
+      </View>
       <View style={styles.questionContainer}>
-        <Text style={styles.questionText} maxFontSizeMultiplier={1}>
-          {currentQuestion}
-        </Text>
-        <View style={styles.arrowRow}>
-          <Entypo
-            name="thumbs-up"
-            size={40}
-            color={questionLikeState ? "green" : "white"}
-            onPress={() => likeQuestion()}
-          />
-          <Entypo
-            name="thumbs-down"
-            size={40}
-            color={questionDislikeState ? "red" : "white"}
+        <Text></Text>
+        <View style={{ paddingHorizontal: 32 }}>
+          <Text style={styles.questionText} maxFontSizeMultiplier={1}>
+            {currentQuestion}
+          </Text>
+        </View>
+        <View style={styles.likeRow}>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              height: 48,
+              backgroundColor: "#FFC7CE",
+              justifyContent: "center",
+              alignItems: "center",
+              borderColor: questionDislikeState ? "#9e1b2b" : "transparent",
+              borderWidth: 5,
+              borderBottomLeftRadius: 16,
+            }}
             onPress={() => dislikeQuestion()}
-          />
+          >
+            <Text
+              style={{ fontSize: 16, fontWeight: "700" }}
+              maxFontSizeMultiplier={1}
+            >
+              Don't Like
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              height: 48,
+              backgroundColor: "#C6EFCE",
+              justifyContent: "center",
+              alignItems: "center",
+              borderColor: questionLikeState ? "#3d7548" : "transparent",
+              borderWidth: 5,
+              borderBottomRightRadius: 16,
+            }}
+            onPress={() => likeQuestion()}
+          >
+            <Text
+              style={{ fontSize: 16, fontWeight: "700" }}
+              maxFontSizeMultiplier={1}
+            >
+              Good Question
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
       <StatusBar style="auto" />
-      <View style={styles.arrowRow}>
-        <TouchableOpacity onPress={previousQuestion} activeOpacity={1}>
+      <View style={styles.questionArrowRow}>
+        <AntDesign
+          name="arrowleft"
+          size={48}
+          color={currentIndex == 0 ? "gray" : "white"}
+          onPress={previousQuestion}
+        />
+        <TouchableOpacity
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            width: 40,
+            height: 40,
+            backgroundColor: "black",
+            borderRadius: 32,
+            borderWidth: 1,
+            borderColor: "white",
+          }}
+          onPress={() => setIsFeedbackModalOpen(true)}
+        >
+          {/* <Text
+            maxFontSizeMultiplier={1}
+            style={{
+              fontSize: 32,
+              fontWeight: "bold",
+              color: "white",
+            }}
+          >
+            ?
+          </Text> */}
+          <AntDesign name="form" size={20} color="white" />
+        </TouchableOpacity>
+        <AntDesign
+          name="arrowright"
+          size={48}
+          color={currentIndex >= questions.length - 1 ? "gray" : "white"}
+          onPress={nextQuestion}
+        />
+        {/* <TouchableOpacity onPress={previousQuestion} activeOpacity={1}>
           <Text
             style={{ color: currentIndex < 1 ? "gray" : "white", fontSize: 64 }}
             maxFontSizeMultiplier={1.1}
@@ -720,7 +867,7 @@ export default function MixupQuestions() {
           >
             &gt;
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Create Party Modal */}
@@ -856,31 +1003,44 @@ export default function MixupQuestions() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#25292e",
+    backgroundColor: "#e76f51",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    paddingTop: 24,
+    paddingHorizontal: 36,
+    paddingVertical: 30,    
   },
   questionContainer: {
-    flex: 1,
-    justifyContent: "center",
+    // flex: 1,
+    justifyContent: "space-between",
     alignItems: "center",
     width: "100%",
-    paddingHorizontal: 10,
-    gap: 16,
+    height: "70%",
+    backgroundColor: "white",
+    borderRadius: 16,
+
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
   },
   questionText: {
-    color: "white",
-    fontSize: 36,
+    color: "black",
+    fontSize: 24,
+    fontWeight: "700",
     textAlign: "center",
   },
-  arrowRow: {
+  likeRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 32,
-    gap: 32,
+  },
+  questionArrowRow: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-between",
   },
   selectPartyRow: {
     flexDirection: "row",

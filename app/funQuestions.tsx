@@ -28,7 +28,7 @@ import {
 } from "firebase/firestore";
 import questions from "../funQuestions.json";
 import * as Application from "expo-application";
-import Entypo from "@expo/vector-icons/Entypo";
+import AntDesign from "@expo/vector-icons/AntDesign";
 
 export default function FunQuestions() {
   const db = getFirestore(app);
@@ -304,6 +304,8 @@ export default function FunQuestions() {
     }
   }, [showPartyModal]);
   useEffect(() => {
+    let isCancelled = false;
+
     const getQuestionLikeState = async () => {
       setQuestionLikeState(false);
       setQuestionDislikeState(false);
@@ -312,35 +314,43 @@ export default function FunQuestions() {
       const questionsCol = collection(db, "questions");
       const q = query(questionsCol, where("question", "==", currentQuestion));
       const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        console.log("QUESTION FOUND!");
-        const doc = querySnapshot.docs[0];
+      if (!isCancelled) {
+        if (!querySnapshot.empty) {
+          console.log("QUESTION FOUND!");
+          const doc = querySnapshot.docs[0];
 
-        const docRef = doc.ref;
+          const docRef = doc.ref;
 
-        const likersCol = collection(docRef, "likeIds");
-        const likersQ = query(likersCol, where("id", "==", iosId));
-        const likerSnapshot = await getDocs(likersQ);
+          const likersCol = collection(docRef, "likeIds");
+          const likersQ = query(likersCol, where("id", "==", iosId));
+          const likerSnapshot = await getDocs(likersQ);
 
-        if (!likerSnapshot.empty) {
-          console.log("IOS ID FOUND IN LIKERS!");
-          setQuestionLikeState(true);
-        } else {
-          console.log("IOS ID NOT FOUND IN LIKERS!");
-          const dislikersCol = collection(docRef, "dislikeIds");
-          const dislikersQ = query(dislikersCol, where("id", "==", iosId));
-          const dislikerSnapshot = await getDocs(dislikersQ);
+          if (!isCancelled) {
+            if (!likerSnapshot.empty) {
+              console.log("IOS ID FOUND IN LIKERS!");
+              setQuestionLikeState(true);
+            } else {
+              console.log("IOS ID NOT FOUND IN LIKERS!");
+              const dislikersCol = collection(docRef, "dislikeIds");
+              const dislikersQ = query(dislikersCol, where("id", "==", iosId));
+              const dislikerSnapshot = await getDocs(dislikersQ);
 
-          if (!dislikerSnapshot.empty) {
-            console.log("IOS ID FOUND IN DISLIKERS");
-            setQuestionDislikeState(true);
+              if (!isCancelled && !dislikerSnapshot.empty) {
+                console.log("IOS ID FOUND IN DISLIKERS");
+                setQuestionDislikeState(true);
+              }
+            }
           }
+        } else {
+          console.log("QUESTION NOT FOUND!");
         }
-      } else {
-        console.log("QUESTION NOT FOUND!");
       }
     };
     getQuestionLikeState();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [currentQuestion]);
   const likeQuestion = async () => {
     if (questionLikeInProgress.current) {
@@ -438,7 +448,7 @@ export default function FunQuestions() {
   };
   return (
     <View style={styles.container}>
-      <View
+      {/* <View
         style={{
           width: "100%",
           flexDirection: "row",
@@ -463,13 +473,13 @@ export default function FunQuestions() {
             style={{
               fontSize: 32,
               fontWeight: "bold",
-              color: "white"
+              color: "white",
             }}
           >
             ?
           </Text>
         </TouchableOpacity>
-      </View>
+      </View> */}
 
       <Modal
         animationType="slide"
@@ -731,28 +741,102 @@ export default function FunQuestions() {
           </Text>
         </TouchableOpacity>
       )} */}
+
+      {/* <Text style={{ color: "white", fontSize: 24, fontWeight: 800 }}>
+        Hypothetical
+      </Text> */}
+      <View>
+      </View>
       <View style={styles.questionContainer}>
-        <Text style={styles.questionText} maxFontSizeMultiplier={1}>
-          {currentQuestion}
-        </Text>
-        <View style={styles.arrowRow}>
-          <Entypo
-            name="thumbs-up"
-            size={40}
-            color={questionLikeState ? "green" : "white"}
-            onPress={() => likeQuestion()}
-          />
-          <Entypo
-            name="thumbs-down"
-            size={40}
-            color={questionDislikeState ? "red" : "white"}
+        <Text></Text>
+        <View style={{ paddingHorizontal: 32 }}>
+          <Text style={styles.questionText} maxFontSizeMultiplier={1}>
+            {currentQuestion}
+          </Text>
+        </View>
+        <View style={styles.likeRow}>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              height: 48,
+              backgroundColor: "#FFC7CE",
+              justifyContent: "center",
+              alignItems: "center",
+              borderColor: questionDislikeState ? "#9e1b2b" : "transparent",
+              borderWidth: 5,
+              borderBottomLeftRadius: 16,
+            }}
             onPress={() => dislikeQuestion()}
-          />
+          >
+            <Text
+              style={{ fontSize: 16, fontWeight: "700" }}
+              maxFontSizeMultiplier={1}
+            >
+              Don't Like
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              height: 48,
+              backgroundColor: "#C6EFCE",
+              justifyContent: "center",
+              alignItems: "center",
+              borderColor: questionLikeState ? "#3d7548" : "transparent",
+              borderWidth: 5,
+              borderBottomRightRadius: 16,
+            }}
+            onPress={() => likeQuestion()}
+          >
+            <Text
+              style={{ fontSize: 16, fontWeight: "700" }}
+              maxFontSizeMultiplier={1}
+            >
+              Good Question
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
       <StatusBar style="auto" />
-      <View style={styles.arrowRow}>
-        <TouchableOpacity onPress={previousQuestion} activeOpacity={1}>
+      <View style={styles.questionArrowRow}>
+        <AntDesign
+          name="arrowleft"
+          size={48}
+          color={currentIndex == 0 ? "gray" : "white"}
+          onPress={previousQuestion}
+        />
+        <TouchableOpacity
+          style={{
+            justifyContent: "center",
+            alignItems: "center",
+            width: 40,
+            height: 40,
+            backgroundColor: "black",
+            borderRadius: 32,
+            borderWidth: 1,
+            borderColor: "white",
+          }}
+          onPress={() => setIsFeedbackModalOpen(true)}
+        >
+          {/* <Text
+            maxFontSizeMultiplier={1}
+            style={{
+              fontSize: 32,
+              fontWeight: "bold",
+              color: "white",
+            }}
+          >
+            ?
+          </Text> */}
+          <AntDesign name="form" size={20} color="white" />
+        </TouchableOpacity>
+        <AntDesign
+          name="arrowright"
+          size={48}
+          color={currentIndex >= questions.length - 1 ? "gray" : "white"}
+          onPress={nextQuestion}
+        />
+        {/* <TouchableOpacity onPress={previousQuestion} activeOpacity={1}>
           <Text
             style={{ color: currentIndex < 1 ? "gray" : "white", fontSize: 64 }}
             maxFontSizeMultiplier={1.1}
@@ -773,7 +857,7 @@ export default function FunQuestions() {
           >
             &gt;
           </Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
       {/* Create Party Modal */}
@@ -909,31 +993,44 @@ export default function FunQuestions() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#25292e",
+    backgroundColor: "#c97353",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    paddingTop: 24,
+    paddingHorizontal: 36,
+    paddingVertical: 30,    
   },
   questionContainer: {
-    flex: 1,
-    justifyContent: "center",
+    // flex: 1,
+    justifyContent: "space-between",
     alignItems: "center",
     width: "100%",
-    paddingHorizontal: 10,
-    gap: 16,
+    height: "70%",
+    backgroundColor: "white",
+    borderRadius: 16,
+
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 8,
   },
   questionText: {
-    color: "white",
-    fontSize: 36,
+    color: "black",
+    fontSize: 24,
+    fontWeight: "700",
     textAlign: "center",
   },
-  arrowRow: {
+  likeRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 32,
-    gap: 32,
+  },
+  questionArrowRow: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "space-between",
   },
   selectPartyRow: {
     flexDirection: "row",
