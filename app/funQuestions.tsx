@@ -2,6 +2,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
 import {
   Button,
+  Image,
   Keyboard,
   Modal,
   Pressable,
@@ -13,7 +14,6 @@ import {
   View,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-// import db from "../firebaseConfig";
 import app from "../firebaseConfig";
 import {
   collection,
@@ -23,8 +23,6 @@ import {
   query,
   getDocs,
   deleteDoc,
-  updateDoc,
-  Transaction,
 } from "firebase/firestore";
 import questions from "../funQuestions.json";
 import * as Application from "expo-application";
@@ -54,6 +52,8 @@ export default function FunQuestions() {
   const [questionLikeState, setQuestionLikeState] = useState(false);
   const [questionDislikeState, setQuestionDislikeState] = useState(false);
 
+  const [favoritedQuestions, setFavoritedQuestions] = useState<string[]>([]);
+
   const questionLikeInProgress = useRef(false);
 
   const shuffleArray = (array: string[]) => {
@@ -68,6 +68,8 @@ export default function FunQuestions() {
     shuffleArray(questions)
   );
   const [currentQuestion, setCurrentQuestion] = useState(shuffledQuestions[0]);
+  const [currentQuestionFavorited, setCurrentQuestionFavorited] =
+    useState(false);
 
   const nextQuestion = () => {
     let nextIndex = currentIndex + 1;
@@ -83,162 +85,14 @@ export default function FunQuestions() {
     }
   };
   const previousQuestion = () => {
-    removeParty();
 
     let nextIndex = currentIndex - 1;
     if (nextIndex >= 0) {
       setCurrentIndex(nextIndex);
       setCurrentQuestion(shuffledQuestions[nextIndex]);
     }
+  };
 
-    if (isParty) {
-      setParty(shuffleArray(party));
-      setCurrentPartyIndex(0);
-    }
-  };
-  const previousPartyMember = () => {
-    let previousIndex = currentPartyIndex - 1;
-    if (previousIndex >= 0) {
-      setCurrentPartyIndex(previousIndex);
-    }
-  };
-  const nextPartyMember = () => {
-    let nextIndex = currentPartyIndex + 1;
-    if (nextIndex < party.length) {
-      setCurrentPartyIndex(nextIndex);
-    }
-  };
-  const addPlayer = () => {
-    setPlayers([...players, ""]);
-  };
-  const getData = async (key: string) => {
-    try {
-      const value = await AsyncStorage.getItem(key);
-      if (value !== null) {
-        return JSON.parse(value);
-      }
-    } catch (error) {
-      console.log(error);
-    }
-    return null;
-  };
-  const storePartyData = async (value: string[]) => {
-    try {
-      await AsyncStorage.setItem("currentParty", JSON.stringify(value));
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const getCurrentParty = async () => {
-    try {
-      const value = await AsyncStorage.getItem("currentParty");
-      if (value !== null) {
-        const arrayValue = JSON.parse(value);
-        setParty(arrayValue);
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  };
-  const removeParty = async () => {
-    try {
-      await AsyncStorage.clear();
-      await AsyncStorage.removeItem("currentParty");
-      setParty([]);
-      setIsParty(false);
-    } catch (e) {
-      console.log(e);
-    }
-    console.log("Item removed.");
-  };
-  const createParty = () => {
-    const partyMembers = players.filter((partyMember) => partyMember !== "");
-    storePartyData(partyMembers);
-    setPlayers(["", ""]);
-    setParty(partyMembers);
-    setShowPartyModal(false);
-  };
-  const editParty = () => {
-    const partyMembers = players.filter((partyMember) => partyMember !== "");
-    storePartyData(partyMembers);
-    setPlayers(["", ""]);
-    setParty(partyMembers);
-    setShowPartyModal(false);
-    setCurrentPartyIndex(0);
-  };
-  const handlePlayerChange = (text: string, index: number) => {
-    const newPlayers = [...players];
-    newPlayers[index] = text;
-    setPlayers(newPlayers);
-  };
-  const getFirstAvailablePartyKey = async () => {
-    try {
-      let index = 0;
-      while (true) {
-        const value = await AsyncStorage.getItem(`party${index}`);
-        if (value === null) {
-          return index;
-        }
-        index++;
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const storeCurrentParty = async () => {
-    try {
-      const storageKey = await getFirstAvailablePartyKey();
-      await AsyncStorage.setItem(`party${storageKey}`, JSON.stringify(party));
-      setPlayers(["", ""]);
-      setParty([]);
-      setIsParty(false);
-      loadPartySelection();
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const loadPartySelection = async () => {
-    try {
-      let partiesLoaded: string[][] = [];
-      let index = 0;
-      while (true) {
-        const value = await AsyncStorage.getItem(`party${index}`);
-        if (value === null) {
-          setLoadedParties(partiesLoaded);
-          break;
-        }
-        partiesLoaded[index] = JSON.parse(value);
-        index++;
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-  const loadSelectedParty = async (idx: number, loadedParty: string[]) => {
-    try {
-      await AsyncStorage.setItem("currentParty", JSON.stringify(loadedParty));
-      if (isParty) {
-        await AsyncStorage.setItem(`party${idx}`, JSON.stringify(party));
-      } else {
-        await AsyncStorage.removeItem(`party${idx}`);
-        idx = idx + 1;
-        while (true) {
-          const storedValue = await AsyncStorage.getItem(`party${idx}`);
-          if (storedValue === null) {
-            break;
-          }
-          await AsyncStorage.removeItem(`party${idx}`);
-          await AsyncStorage.setItem(`party${idx - 1}`, storedValue);
-          idx++;
-        }
-      }
-      setParty(loadedParty);
-      setShowExistingParties(false);
-      setShowPartyModal(false);
-    } catch (error) {
-      console.log(error);
-    }
-  };
   const updateNewQuestionsToDB = async () => {
     const dbQuestions = collection(db, "questions");
     const dbQuestionsSnapshot = await getDocs(dbQuestions);
@@ -283,7 +137,8 @@ export default function FunQuestions() {
     setFeedbackValue("");
   };
   useEffect(() => {
-    getCurrentParty();
+    getFavoritedQuestions();
+    // getCurrentParty();
     // getDbQuestions();
 
     // RUN THIS CODE TO SYNC ONLINE DB TO LOCAL
@@ -291,67 +146,85 @@ export default function FunQuestions() {
 
     // Application.getIosIdForVendorAsync().then((iosId) => { console.log(iosId )});
   }, []);
+  // useEffect(() => {
+  //   if (party.length > 0) {
+  //     setIsParty(true);
+  //   } else {
+  //     setIsParty(false);
+  //   }
+  // }, [party]);
+  // useEffect(() => {
+  //   if (showPartyModal) {
+  //     loadPartySelection();
+  //   }
+  // }, [showPartyModal]);
+  // useEffect(() => {
+  //   let isCancelled = false;
+
+  //   const getQuestionLikeState = async () => {
+  //     setQuestionLikeState(false);
+  //     setQuestionDislikeState(false);
+  //     const iosId = await Application.getIosIdForVendorAsync();
+
+  //     const questionsCol = collection(db, "questions");
+  //     const q = query(questionsCol, where("question", "==", currentQuestion));
+  //     const querySnapshot = await getDocs(q);
+  //     if (!isCancelled) {
+  //       if (!querySnapshot.empty) {
+  //         console.log("QUESTION FOUND!");
+  //         const doc = querySnapshot.docs[0];
+
+  //         const docRef = doc.ref;
+
+  //         const likersCol = collection(docRef, "likeIds");
+  //         const likersQ = query(likersCol, where("id", "==", iosId));
+  //         const likerSnapshot = await getDocs(likersQ);
+
+  //         if (!isCancelled) {
+  //           if (!likerSnapshot.empty) {
+  //             console.log("IOS ID FOUND IN LIKERS!");
+  //             setQuestionLikeState(true);
+  //           } else {
+  //             console.log("IOS ID NOT FOUND IN LIKERS!");
+  //             const dislikersCol = collection(docRef, "dislikeIds");
+  //             const dislikersQ = query(dislikersCol, where("id", "==", iosId));
+  //             const dislikerSnapshot = await getDocs(dislikersQ);
+
+  //             if (!isCancelled && !dislikerSnapshot.empty) {
+  //               console.log("IOS ID FOUND IN DISLIKERS");
+  //               setQuestionDislikeState(true);
+  //             }
+  //           }
+  //         }
+  //       } else {
+  //         console.log("QUESTION NOT FOUND!");
+  //       }
+  //     }
+  //   };
+  //   getQuestionLikeState();
+
+  //   return () => {
+  //     isCancelled = true;
+  //   };
+  // }, [currentQuestion]);
   useEffect(() => {
-    if (party.length > 0) {
-      setIsParty(true);
+    if (favoritedQuestions?.includes(currentQuestion)) {
+      setCurrentQuestionFavorited(true);
     } else {
-      setIsParty(false);
+      setCurrentQuestionFavorited(false);
     }
-  }, [party]);
+  }, [currentQuestion]);
   useEffect(() => {
-    if (showPartyModal) {
-      loadPartySelection();
-    }
-  }, [showPartyModal]);
-  useEffect(() => {
-    let isCancelled = false;
-
-    const getQuestionLikeState = async () => {
-      setQuestionLikeState(false);
-      setQuestionDislikeState(false);
-      const iosId = await Application.getIosIdForVendorAsync();
-
-      const questionsCol = collection(db, "questions");
-      const q = query(questionsCol, where("question", "==", currentQuestion));
-      const querySnapshot = await getDocs(q);
-      if (!isCancelled) {
-        if (!querySnapshot.empty) {
-          console.log("QUESTION FOUND!");
-          const doc = querySnapshot.docs[0];
-
-          const docRef = doc.ref;
-
-          const likersCol = collection(docRef, "likeIds");
-          const likersQ = query(likersCol, where("id", "==", iosId));
-          const likerSnapshot = await getDocs(likersQ);
-
-          if (!isCancelled) {
-            if (!likerSnapshot.empty) {
-              console.log("IOS ID FOUND IN LIKERS!");
-              setQuestionLikeState(true);
-            } else {
-              console.log("IOS ID NOT FOUND IN LIKERS!");
-              const dislikersCol = collection(docRef, "dislikeIds");
-              const dislikersQ = query(dislikersCol, where("id", "==", iosId));
-              const dislikerSnapshot = await getDocs(dislikersQ);
-
-              if (!isCancelled && !dislikerSnapshot.empty) {
-                console.log("IOS ID FOUND IN DISLIKERS");
-                setQuestionDislikeState(true);
-              }
-            }
-          }
-        } else {
-          console.log("QUESTION NOT FOUND!");
-        }
+    const updateFavoritedQuestionsInStorage = async () => {
+      try {
+        const stringifiedFavorites = JSON.stringify(favoritedQuestions);
+        await AsyncStorage.setItem("favorites", stringifiedFavorites);
+      } catch (error) {
+        console.log(error);
       }
     };
-    getQuestionLikeState();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [currentQuestion]);
+    updateFavoritedQuestionsInStorage();
+  }, [favoritedQuestions]);
   const likeQuestion = async () => {
     if (questionLikeInProgress.current) {
       return;
@@ -445,6 +318,34 @@ export default function FunQuestions() {
       }
     }
     questionLikeInProgress.current = false;
+  };
+  const getFavoritedQuestions = async () => {
+    try {
+      const favorites = await AsyncStorage.getItem("favorites");
+      if (favorites !== null) {
+        const favoritesParsedArray: string[] = JSON.parse(favorites);
+        setFavoritedQuestions(favoritesParsedArray);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  const favoriteQuestion = async () => {
+    try {
+      if (favoritedQuestions.includes(currentQuestion)) {
+        setFavoritedQuestions(
+          favoritedQuestions.filter(
+            (favQuestion) => favQuestion !== currentQuestion
+          )
+        );
+        setCurrentQuestionFavorited(false);
+      } else {
+        setFavoritedQuestions([...favoritedQuestions, currentQuestion]);
+        setCurrentQuestionFavorited(true);
+      }
+    } catch (error) {
+      console.log(error);
+    }
   };
   return (
     <View style={styles.container}>
@@ -745,58 +646,127 @@ export default function FunQuestions() {
       {/* <Text style={{ color: "white", fontSize: 24, fontWeight: 800 }}>
         Hypothetical
       </Text> */}
-      <View>
-      </View>
+      <View></View>
       <View style={styles.questionContainer}>
-        <Text></Text>
+        {/* <Text></Text> */}
+        <Image
+          source={require("../assets/images/fullLogo.png")}
+          style={{ width: 125, height: 70, marginTop: 20 }}
+          resizeMode="contain"
+        />
         <View style={{ paddingHorizontal: 32 }}>
           <Text style={styles.questionText} maxFontSizeMultiplier={1}>
             {currentQuestion}
           </Text>
         </View>
-        <View style={styles.likeRow}>
-          <TouchableOpacity
-            style={{
-              flex: 1,
-              height: 48,
-              backgroundColor: "#FFC7CE",
-              justifyContent: "center",
-              alignItems: "center",
-              borderColor: questionDislikeState ? "#9e1b2b" : "transparent",
-              borderWidth: 5,
-              borderBottomLeftRadius: 16,
-            }}
-            onPress={() => dislikeQuestion()}
-          >
-            <Text
-              style={{ fontSize: 16, fontWeight: "700" }}
-              maxFontSizeMultiplier={1}
-            >
-              Don't Like
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={{
-              flex: 1,
-              height: 48,
-              backgroundColor: "#C6EFCE",
-              justifyContent: "center",
-              alignItems: "center",
-              borderColor: questionLikeState ? "#3d7548" : "transparent",
-              borderWidth: 5,
-              borderBottomRightRadius: 16,
-            }}
-            onPress={() => likeQuestion()}
-          >
-            <Text
-              style={{ fontSize: 16, fontWeight: "700" }}
-              maxFontSizeMultiplier={1}
-            >
-              Good Question
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <Image
+          source={require("../assets/images/fullLogo.png")}
+          style={{
+            width: 125,
+            height: 70,
+            marginBottom: 20,
+            tintColor: "white",
+          }}
+          resizeMode="contain"
+        />
       </View>
+      <View style={styles.likeRow}>
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            height: 48,
+            backgroundColor: "white",
+            justifyContent: "center",
+            alignItems: "center",
+            flexDirection: "row",
+            // borderColor: questionLikeState ? "#3d7548" : "transparent",
+            // borderWidth: 5,
+            borderRadius: 8,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+            gap: 16,
+          }}
+          onPress={() => {
+            // setQuestionFavorited(!questionFavorited);
+            favoriteQuestion();
+          }}
+        >
+          <AntDesign
+            name={currentQuestionFavorited ? "star" : "staro"}
+            size={36}
+            color="#F9AB05"
+          />
+          <Text
+            style={{ fontSize: 16, fontWeight: "700" }}
+            maxFontSizeMultiplier={1}
+          >
+            {currentQuestionFavorited
+              ? "Added to Favorites!"
+              : "Add to Favorites!"}
+          </Text>
+        </TouchableOpacity>
+      </View>
+      {/* <View style={styles.likeRow}>
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            height: 48,
+            backgroundColor: "#FA3C1F",
+            justifyContent: "center",
+            alignItems: "center",
+            borderColor: questionDislikeState ? "#9e1b2b" : "transparent",
+            borderWidth: 5,
+            borderRadius: 8,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+          }}
+          onPress={() => dislikeQuestion()}
+        >
+          <Text
+            style={{ fontSize: 16, fontWeight: "700" }}
+            maxFontSizeMultiplier={1}
+          >
+            Don't Like
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={{
+            flex: 1,
+            height: 48,
+            backgroundColor: "#00E868",
+            justifyContent: "center",
+            alignItems: "center",
+            borderColor: questionLikeState ? "#3d7548" : "transparent",
+            borderWidth: 5,
+            borderRadius: 8,
+            shadowColor: "#000",
+            shadowOffset: {
+              width: 0,
+              height: 2,
+            },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+          }}
+          onPress={() => likeQuestion()}
+        >
+          <Text
+            style={{ fontSize: 16, fontWeight: "700" }}
+            maxFontSizeMultiplier={1}
+          >
+            Good Question
+          </Text>
+        </TouchableOpacity>
+      </View> */}
       <StatusBar style="auto" />
       <View style={styles.questionArrowRow}>
         <AntDesign
@@ -809,12 +779,12 @@ export default function FunQuestions() {
           style={{
             justifyContent: "center",
             alignItems: "center",
-            width: 40,
-            height: 40,
-            backgroundColor: "black",
+            width: 48,
+            height: 48,
+            backgroundColor: "white",
             borderRadius: 32,
-            borderWidth: 1,
-            borderColor: "white",
+            borderWidth: 2,
+            borderColor: "black",
           }}
           onPress={() => setIsFeedbackModalOpen(true)}
         >
@@ -828,7 +798,7 @@ export default function FunQuestions() {
           >
             ?
           </Text> */}
-          <AntDesign name="form" size={20} color="white" />
+          <AntDesign name="form" size={20} color="black" />
         </TouchableOpacity>
         <AntDesign
           name="arrowright"
@@ -899,52 +869,6 @@ export default function FunQuestions() {
                     </Text>
                   </TouchableOpacity>
                 </View>
-                {isParty && (
-                  <View style={styles.partySelectMenuButton}>
-                    <TouchableOpacity
-                      onPress={storeCurrentParty}
-                      style={{ padding: 8 }}
-                    >
-                      <Text
-                        style={{ color: "white" }}
-                        maxFontSizeMultiplier={1.4}
-                      >
-                        Create a New Party
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-              <View style={styles.formTitleRow}>
-                <Text style={styles.formTitle} maxFontSizeMultiplier={1}>
-                  {isParty ? "Edit Party" : "Create a Party"}
-                </Text>
-                <Pressable onPress={addPlayer}>
-                  <Text style={styles.addPlayer} maxFontSizeMultiplier={1}>
-                    Add a Player
-                  </Text>
-                </Pressable>
-              </View>
-              <ScrollView
-                style={styles.partyMembersContainer}
-                showsVerticalScrollIndicator={true}
-              >
-                {players.map((player, index) => (
-                  <TextInput
-                    key={index}
-                    style={styles.input}
-                    value={player}
-                    placeholder={"Player " + (index + 1)}
-                    onChangeText={(text) => handlePlayerChange(text, index)}
-                  />
-                ))}
-              </ScrollView>
-              <View style={styles.submitButtonContainer}>
-                <Button
-                  title="Submit"
-                  onPress={isParty ? editParty : createParty}
-                  color="black"
-                />
               </View>
             </View>
           ) : (
@@ -965,22 +889,6 @@ export default function FunQuestions() {
                 contentContainerStyle={styles.partySelectionColumn}
                 showsVerticalScrollIndicator={true}
               >
-                {loadedParties.length < 1 && (
-                  <Text style={{ color: "gray", fontSize: 16 }}>
-                    No available parties
-                  </Text>
-                )}
-                {loadedParties.map((loadedParty, idx) => (
-                  <TouchableOpacity
-                    key={idx}
-                    style={styles.partySelectButton}
-                    onPress={() => loadSelectedParty(idx, loadedParty)}
-                  >
-                    <View style={styles.partySelectButtonContainer}>
-                      <Text numberOfLines={1}>{loadedParty.join(", ")}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
               </ScrollView>
             </View>
           )}
@@ -997,7 +905,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 36,
-    paddingVertical: 30,    
+    paddingVertical: 30,
   },
   questionContainer: {
     // flex: 1,
@@ -1007,7 +915,6 @@ const styles = StyleSheet.create({
     height: "70%",
     backgroundColor: "white",
     borderRadius: 16,
-
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -1016,6 +923,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 8,
     elevation: 8,
+    paddingTop: 8,
   },
   questionText: {
     color: "black",
@@ -1026,6 +934,7 @@ const styles = StyleSheet.create({
   likeRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 16,
   },
   questionArrowRow: {
     flexDirection: "row",

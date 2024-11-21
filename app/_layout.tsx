@@ -12,7 +12,7 @@ export default function RootLayout() {
       screenOptions={{
         headerTransparent: false,
         headerStyle: { backgroundColor: "#1C1C1E" },
-        headerTitle: "Hypothetical",
+        headerTitle: "",
         headerBackTitle: "",
         headerBackTitleVisible: false,
         headerTintColor: "white",

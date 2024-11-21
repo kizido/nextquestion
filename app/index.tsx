@@ -1,4 +1,5 @@
 import {
+  Image,
   Keyboard,
   Modal,
   Pressable,
@@ -47,67 +48,101 @@ const HomeScreen = () => {
   return (
     <View style={styles.container}>
       <TouchableOpacity
-          style={{
-            justifyContent: "center",
-            alignItems: "center",
-            width: 40,
-            height: 40,
-            backgroundColor: "black",
-            borderRadius: 32,
-            borderWidth: 1,
-            borderColor: "white",
-            position: "absolute",
-            top: 60,
-            right: 30
-          }}
-          onPress={() => setIsFeedbackModalOpen(true)}
-        >
-          <AntDesign name="form" size={20} color="white" />
-        </TouchableOpacity>
+        style={{
+          justifyContent: "center",
+          alignItems: "center",
+          width: 40,
+          height: 40,
+          backgroundColor: "black",
+          borderRadius: 32,
+          borderWidth: 1,
+          borderColor: "white",
+          position: "absolute",
+          top: 60,
+          right: 30,
+        }}
+        onPress={() => setIsFeedbackModalOpen(true)}
+      >
+        <AntDesign name="form" size={20} color="white" />
+      </TouchableOpacity>
       <View style={{ flexDirection: "row", justifyContent: "center", gap: 16 }}>
-        <Text style={styles.titleText} maxFontSizeMultiplier={1}>
+        {/* <Text style={styles.titleText} maxFontSizeMultiplier={1}>
           Hypothetical
-        </Text>
+        </Text> */}
+        <Image
+          source={require("../assets/images/fullLogoWhite.png")}
+          style={{ width: 200, height: 114 }}
+          resizeMode="contain"
+        />
       </View>
       <Link href="/funQuestions" asChild>
-        <Pressable style={{ ...styles.button, backgroundColor: "#c97353" }}>
+        <Pressable style={{ ...styles.button, backgroundColor: "#EB381D" }}>
           <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
             Fun Questions
           </Text>
         </Pressable>
       </Link>
       <Link href="/deepQuestions" asChild>
-        <Pressable style={{ ...styles.button, backgroundColor: "#d9b991" }}>
+        <Pressable style={{ ...styles.button, backgroundColor: "#c2863c" }}>
           <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
             Deep Questions
           </Text>
         </Pressable>
       </Link>
       <Link href="/personalQuestions" asChild>
-        <Pressable style={{ ...styles.button, backgroundColor: "#6cc48c" }}>
+        <Pressable style={{ ...styles.button, backgroundColor: "#009844" }}>
           <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
             Personal Questions
           </Text>
         </Pressable>
       </Link>
       <Link href="/fantasyQuestions" asChild>
-        <Pressable style={{ ...styles.button, backgroundColor: "#c5adc7" }}>
+        <Pressable style={{ ...styles.button, backgroundColor: "#be56c7" }}>
           <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
             Fantasy Questions
           </Text>
         </Pressable>
       </Link>
       <Link href="/futureQuestions" asChild>
-        <Pressable style={{ ...styles.button, backgroundColor: "#9dcbd4" }}>
+        <Pressable style={{ ...styles.button, backgroundColor: "#44adc2" }}>
           <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
             Future Questions
           </Text>
         </Pressable>
       </Link>
       <Link href="/mixupQuestions" asChild>
+        <Pressable style={{ ...styles.button, backgroundColor: "#99c433" }}>
+          <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
+            Mixup Questions
+          </Text>
+        </Pressable>
+      </Link>
+      {/*
+      fun: c97353 
+      deep: d9b991
+      personal: #2ebf63
+      fantasy: c5adc7
+      future: 9dcbd4
+      //
+      */}
+      {/* <Link href="/mixupQuestions" asChild>
         <Pressable style={{ ...styles.button, backgroundColor: "#e76f51" }}>
           <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
             Mix It Up
+          </Text>
+        </Pressable>
+      </Link> */}
+      <Link href="/favoriteQuestions" asChild>
+        <Pressable
+          style={{
+            ...styles.button,
+            backgroundColor: "#F9AB05",
+            // borderWidth: 6,
+            // borderColor: "#ffffb0",
+          }}
+        >
+          <Text style={styles.buttonText} maxFontSizeMultiplier={1}>
+            My Favorites
           </Text>
         </Pressable>
       </Link>
@@ -336,12 +371,27 @@ const styles = StyleSheet.create({
   },
   button: {
     width: "90%", // Set a fixed width
-    height: 64, // Set a fixed height
+    height: 56, // Set a fixed height
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 16,
+    borderRadius: 10,
+    shadowColor: "#ffffff",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
   },
   buttonText: {
+    fontFamily: "Roboto",
+    fontSize: 20,
+    lineHeight: 21,
+    fontWeight: "800",
+    letterSpacing: 0.25,
+    color: "white",
+  },
+  favoriteButtonText: {
     fontSize: 20,
     lineHeight: 21,
     fontWeight: "800",
