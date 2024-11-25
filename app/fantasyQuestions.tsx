@@ -1111,7 +1111,7 @@ export default function FantasyQuestions() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#c5adc7",
+    backgroundColor: "#d899de",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 36,

@@ -1111,7 +1111,7 @@ export default function DeepQuestions() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#d9b991",
+    backgroundColor: "#bf9562",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 36,

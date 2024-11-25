@@ -2,11 +2,9 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect, useRef, useState } from "react";
 import {
   Alert,
-  Button,
   Image,
   Keyboard,
   Modal,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -463,7 +461,7 @@ export default function FavoriteQuestions() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9AB05",
+    backgroundColor: "#fab625",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 36,

@@ -1111,7 +1111,7 @@ export default function FutureQuestions() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#9dcbd4",
+    backgroundColor: "#6bbecf",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 36,

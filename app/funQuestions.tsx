@@ -901,7 +901,7 @@ export default function FunQuestions() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#c97353",
+    backgroundColor: "#eb6652",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 36,

@@ -1111,7 +1111,7 @@ export default function PersonalQuestions() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#6cc48c",
+    backgroundColor: "#43bf7b",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 36,
