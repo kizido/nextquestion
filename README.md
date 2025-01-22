@@ -45,7 +45,7 @@ Every category is designed to bring out the best conversations and create unforg
 
 ### 🔄 How It Works
 
-1. **📝 Download the App**: Available on iOS and Android.
+1. **📝 Download the App**: Available on iOS.
 2. **🌈 Choose a Category**: Pick from a variety of themes to match your group’s mood.
 3. **🎉 Start the Fun**: Let the prompts guide your conversations and watch the magic unfold.
 
