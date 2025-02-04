@@ -85,7 +85,6 @@ export default function FunQuestions() {
     }
   };
   const previousQuestion = () => {
-
     let nextIndex = currentIndex - 1;
     if (nextIndex >= 0) {
       setCurrentIndex(nextIndex);
@@ -121,19 +120,31 @@ export default function FunQuestions() {
   const writeQuestionSubmissionToDatabase = async () => {
     const iosId = await Application.getIosIdForVendorAsync();
     const dbQuestionSubmissions = collection(db, "questionSubmissions");
-    addDoc(dbQuestionSubmissions, { question: feedbackValue, userId: iosId });
+    if (feedbackValue.trim() !== "") {
+      await addDoc(dbQuestionSubmissions, {
+        question: feedbackValue,
+        userId: iosId,
+      });
+    }
     setFeedbackValue("");
   };
   const writeFeatureRequestToDatabase = async () => {
     const iosId = await Application.getIosIdForVendorAsync();
     const dbFeatureRequests = collection(db, "featureRequests");
-    addDoc(dbFeatureRequests, { feature: feedbackValue, userId: iosId });
+    if (feedbackValue.trim() !== "") {
+      await addDoc(dbFeatureRequests, {
+        feature: feedbackValue,
+        userId: iosId,
+      });
+    }
     setFeedbackValue("");
   };
   const writeBugReportToDatabase = async () => {
     const iosId = await Application.getIosIdForVendorAsync();
     const dbBugReports = collection(db, "bugReports");
-    addDoc(dbBugReports, { bug: feedbackValue, userId: iosId });
+    if (feedbackValue.trim() !== "") {
+      await addDoc(dbBugReports, { bug: feedbackValue, userId: iosId });
+    }
     setFeedbackValue("");
   };
   useEffect(() => {
@@ -888,8 +899,7 @@ export default function FunQuestions() {
               <ScrollView
                 contentContainerStyle={styles.partySelectionColumn}
                 showsVerticalScrollIndicator={true}
-              >
-              </ScrollView>
+              ></ScrollView>
             </View>
           )}
         </View>

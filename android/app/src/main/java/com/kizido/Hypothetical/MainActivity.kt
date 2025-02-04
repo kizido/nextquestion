@@ -1,4 +1,4 @@
-package com.kizido.Hypothetical
+package com.kizido.NextQuestion
 
 import android.os.Build
 import android.os.Bundle

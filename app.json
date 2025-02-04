@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Hypothetical",
+    "name": "Next Question",
     "slug": "Hypothetical",
     "version": "1.1.1",
     "orientation": "default",
@@ -14,15 +14,15 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.kizido.Hypothetical",
-      "buildNumber": "17"
+      "bundleIdentifier": "com.kizido.NextQuestion",
+      "buildNumber": "19"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#1C1C1E"
       },
-      "package": "com.kizido.Hypothetical"
+      "package": "com.kizido.NextQuestion"
     },
     "web": {
       "bundler": "metro",

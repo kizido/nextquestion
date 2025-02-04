@@ -1,4 +1,4 @@
-rootProject.name = 'Hypothetical'
+rootProject.name = 'NextQuestion'
 
 dependencyResolutionManagement {
   versionCatalogs {
